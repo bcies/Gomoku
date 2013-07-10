@@ -18,7 +18,8 @@ public class Gomoku {
 		StringTokenizer token;
 		Scanner in = new Scanner(System.in);
 		while (!board.hasWinner()) {
-			command = in.nextLine();
+			//command = in.nextLine();
+			command = "genmove";
 			if (command.contains("showboard")) {
 				System.out.println(board);
 				switch (board.getColorToPlay()) {
