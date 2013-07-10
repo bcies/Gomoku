@@ -16,11 +16,11 @@ public class Board {
 		board = new int[BOARD_AREA];
 		colorToPlay = BLACK;
 	}
-	
+
 	public void copyBoard(Board fromBoard) {
 		this.colorToPlay = fromBoard.getColorToPlay();
 		int[] fromBoardBoard = fromBoard.getBoard();
-		for(int i = 0; i < BOARD_AREA; i++) {
+		for (int i = 0; i < BOARD_AREA; i++) {
 			this.board[i] = fromBoardBoard[i];
 		}
 	}
@@ -36,7 +36,7 @@ public class Board {
 	public int getBoardWidth() {
 		return BOARD_WIDTH;
 	}
-	
+
 	public int getBoardArea() {
 		return BOARD_AREA;
 	}
@@ -48,12 +48,13 @@ public class Board {
 	public int getWinner() {
 		int color;
 		boolean win = false;
+		boolean boardFull = true;
 		for (int x = 0; x < BOARD_WIDTH; x++) {
 			for (int y = 0; y < BOARD_WIDTH; y++) {
 				color = board[getBoardIndex(x, y)];
 				if (color != VACANT) {
 					win = true;
-					if ((x >= 4) && (y <= 14)) {
+					if ((x >= 4) && (y <= BOARD_WIDTH - 5)) {
 						for (int i = 1; i < 5; i++) {
 							if (board[getBoardIndex(x - i, y + i)] != color) {
 								win = false;
@@ -65,7 +66,7 @@ public class Board {
 						}
 					}
 					win = true;
-					if ((x <= 14) && (y <= 14)) {
+					if ((x <= BOARD_WIDTH - 5) && (y <= BOARD_WIDTH - 5)) {
 						for (int i = 1; i < 5; i++) {
 							if (board[getBoardIndex(x + i, y + i)] != color) {
 								win = false;
@@ -77,7 +78,7 @@ public class Board {
 						}
 					}
 					win = true;
-					if (y <= 14) {
+					if (y <= BOARD_WIDTH - 5) {
 						for (int i = 1; i < 5; i++) {
 							if (board[getBoardIndex(x, y + i)] != color) {
 								win = false;
@@ -89,7 +90,7 @@ public class Board {
 						}
 					}
 					win = true;
-					if (x <= 14) {
+					if (x <= BOARD_WIDTH - 5) {
 						for (int i = 1; i < 5; i++) {
 							if (board[getBoardIndex(x + i, y)] != color) {
 								win = false;
@@ -100,10 +101,16 @@ public class Board {
 							return color;
 						}
 					}
+				} else {
+					boardFull = false;
 				}
 			}
 		}
-		return VACANT;
+		if (boardFull) {
+			return -1;
+		} else {
+			return VACANT;
+		}
 	}
 
 	public boolean hasWinner() {
@@ -113,15 +120,15 @@ public class Board {
 			return true;
 		}
 	}
-	
+
 	public String indexToString(int index) {
 		int row = (index / BOARD_WIDTH) + 1;
 		int column = (index % BOARD_WIDTH);
 		String string = "";
-		if(column > 7) {
+		if (column > 7) {
 			column += 1;
 		}
-		string += (char)(column + 'a');
+		string += (char) (column + 'a');
 		string += row;
 		return string;
 	}
@@ -149,7 +156,7 @@ public class Board {
 	}
 
 	public boolean play(String s) {
-		if(s.length() >= 2) {			
+		if (s.length() >= 2) {
 			return play(stringToIndex(s));
 		} else {
 			return false;
