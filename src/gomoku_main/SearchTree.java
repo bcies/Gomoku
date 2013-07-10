@@ -7,7 +7,7 @@ public class SearchTree {
 
 	ArrayList<SearchNode> treeNodes;
 	private int totalPlayouts;
-	public static final int UCTK = 1;
+	public static final double UCTK = 0.1;
 
 	public SearchTree() {
 		treeNodes = new ArrayList<SearchNode>();
@@ -59,7 +59,7 @@ public class SearchTree {
 						* Math.sqrt(Math.log(totalPlayouts)
 								/ treeNodes.get(i).getPlayouts());
 			} else {
-				UCTScore = 0.2;
+				UCTScore = 0.5;
 			}
 			if (UCTScore > bestScore) {
 				bestScore = UCTScore;
@@ -69,10 +69,11 @@ public class SearchTree {
 
 		if (treeNodes.get(bestIndex).getPlayouts() == 0) {
 			treeNodes.get(bestIndex).playout(tempBoard);
+			totalPlayouts++;
 		} else {
 			treeNodes.get(bestIndex).traverseNode(tempBoard);
 		}
-		totalPlayouts++;
+		
 	}
 
 	public ArrayList<SearchNode> getNodes() {
@@ -86,5 +87,17 @@ public class SearchTree {
 			}
 		}
 		return -1;
+	}
+
+	@Override
+	public String toString() {
+		String s = "";
+		for (SearchNode node : treeNodes) {
+			if (node.getPlayouts() != 0) {
+				s += node.toString(0);
+				
+			}
+		}
+		return s;
 	}
 }

@@ -13,12 +13,12 @@ public class Gomoku {
 	public static void main(String args[]) {
 		board = new Board();
 		List<Double> turnTimes = new LinkedList<Double>();
-		Player player = new Player();
+		Player player = new Player(2000);
 		String command;
 		StringTokenizer token;
 		Scanner in = new Scanner(System.in);
 		while (!board.hasWinner()) {
-			//command = in.nextLine();
+//			command = in.nextLine();
 			command = "genmove";
 			if (command.contains("showboard")) {
 				System.out.println(board);
@@ -39,7 +39,7 @@ public class Gomoku {
 				}
 			} else if (command.contains("genmove")) {
 				long startTime = System.nanoTime();
-				int playerMove = player.getBestMove(board);
+				int playerMove = player.getBestMove(board, command.contains("showtree"));
 				double turnTime = (System.nanoTime()-startTime)/1000000.0;
 				turnTimes.add(turnTime);
 				System.out.println("Player played at "

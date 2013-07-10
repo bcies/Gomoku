@@ -50,8 +50,8 @@ public class SearchNode {
 	public int getWins() {
 		return wins;
 	}
-	
-	public boolean isExhausted(){
+
+	public boolean isExhausted() {
 		return exhausted;
 	}
 
@@ -80,15 +80,14 @@ public class SearchNode {
 		if (this.playouts <= 1) {
 			createChildrenNodes(board);
 		}
-		if (children.size() == 0){
+		if (children.size() == 0) {
 			this.exhausted = true;
 			return -2;
 		}
 		for (int i = 0; i < children.size(); i++) {
-			if (children.get(i).isExhausted()){
+			if (children.get(i).isExhausted()) {
 				UCTScore = -2;
-			}
-			else if (children.get(i).getPlayouts() != 0) {
+			} else if (children.get(i).getPlayouts() != 0) {
 				double winRate = 1.0 * children.get(i).getWins()
 						/ children.get(i).getPlayouts();
 				UCTScore = winRate
@@ -103,7 +102,7 @@ public class SearchNode {
 				bestIndex = i;
 			}
 		}
-		if (bestIndex == -1){
+		if (bestIndex == -1) {
 			this.exhausted = true;
 			return -2;
 		}
@@ -117,7 +116,7 @@ public class SearchNode {
 			return win;
 		} else {
 			win = children.get(bestIndex).traverseNode(board);
-			if (win == -2){
+			if (win == -2) {
 				win = this.traverseNode(board);
 			}
 			if (this.color == win) {
@@ -126,7 +125,7 @@ public class SearchNode {
 			this.playouts++;
 			return win;
 		}
-		
+
 	}
 
 	// board.play(this.move);
@@ -151,6 +150,24 @@ public class SearchNode {
 	// wins += 1;
 	// }
 	// return winner;
+
+	public String toString(int height) {
+		String s = "";
+		for (int i = 0; i < height; i++){
+			s += "   ";
+		}
+		s += "Move: " + Board.indexToString(this.getMove()) + " Color: "
+				+ Board.colorToString(this.getColor()) + " Playouts: "
+				+ this.getPlayouts() + " Wins: " + this.getWins() + "\n";
+		if (this.children.size() != 0){
+			for (SearchNode child: children){
+				if (child.getPlayouts() != 0){
+					s += child.toString(height + 1);
+				}
+			}
+		}
+		return s;
+	}
 
 	public int indexOfNode(int move) {
 		for (int i = 0; i < children.size(); i++) {

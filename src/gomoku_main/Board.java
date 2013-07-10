@@ -6,7 +6,7 @@ public class Board {
 	public static final int BLACK = 1;
 	public static final int WHITE = 2;
 
-	private final int BOARD_WIDTH = 19;
+	private static final int BOARD_WIDTH = 9;
 	private int BOARD_AREA;
 	private int[] board;
 	private int colorToPlay;
@@ -15,6 +15,15 @@ public class Board {
 		BOARD_AREA = BOARD_WIDTH * BOARD_WIDTH;
 		board = new int[BOARD_AREA];
 		colorToPlay = BLACK;
+	}
+	
+	public static String colorToString(int color){
+		if (color == BLACK){
+			return "Black";
+		}
+		else {
+			return "White";
+		}
 	}
 
 	public void copyBoard(Board fromBoard) {
@@ -121,7 +130,7 @@ public class Board {
 		}
 	}
 
-	public String indexToString(int index) {
+	public static String indexToString(int index) {
 		int row = (index / BOARD_WIDTH) + 1;
 		int column = (index % BOARD_WIDTH);
 		String string = "";

@@ -3,9 +3,14 @@ package gomoku_main;
 import java.util.ArrayList;
 
 public class Player {
+	
+	private int playouts;
+	
+	public Player(int playouts){
+		this.playouts = playouts;
+	}
 
-	public int getBestMove(Board board) {
-		int playouts = 2000;
+	public int getBestMove(Board board, boolean showTree) {
 		SearchTree tree = new SearchTree();
 		for (int i = 0; i < playouts; i++) {
 			tree.createRootNodes(board);
@@ -17,6 +22,9 @@ public class Player {
 			if (nodes.get(i).getWins() > nodes.get(bestNodeIndex).getWins()) {
 				bestNodeIndex = i;
 			}
+		}
+		if (showTree){
+			System.out.println(tree);
 		}
 		return nodes.get(bestNodeIndex).getMove();
 	}
