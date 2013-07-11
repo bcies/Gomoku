@@ -5,15 +5,17 @@ import java.util.ArrayList;
 public class Player {
 
 	private int playouts;
+	private boolean useHeuristics;
 
-	public Player(int playouts) {
+	public Player(int playouts, boolean useHeuristics) {
 		this.playouts = playouts;
+		this.useHeuristics = useHeuristics;
 	}
 
 	public int getBestMove(Board board, boolean showTree) {
 		SearchTree tree = new SearchTree();
+		tree.createRootNodes(board, useHeuristics);
 		for (int i = 0; i < playouts; i++) {
-			tree.createRootNodes(board);
 			tree.expandUCTTree(board);
 		}
 		ArrayList<SearchNode> nodes = tree.getNodes();

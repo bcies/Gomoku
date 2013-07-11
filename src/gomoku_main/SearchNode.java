@@ -86,15 +86,28 @@ public class SearchNode {
 		}
 		winner = tempBoard.getWinner();
 		if (winner == color) {
-			winrate = (formerPlayouts * winrate + 1) / playouts;
-		}
-		if (winner == -1) {
+			winrate = (formerPlayouts * winrate + 1.0) / (playouts * 1.0);
+		}else if (winner == -1) {
 			// If the result is a tie.
-			winrate = (formerPlayouts * winrate + 0.5) / playouts;
+			winrate = (formerPlayouts * winrate + 0.5) / (playouts * 1.0);
+		} else {
+			winrate = (formerPlayouts * winrate + 0.0) / (playouts * 1.0);
 		}
 		return winner;
 	}
+	
+	public void setFinalNode(boolean b) {
+		finalNode = b;
+	}
+	
+	public void setPlayouts(int value) {
+		playouts = value;
+	}
 
+	public void setWinRate(double value) {
+		winrate = value;
+	}
+	
 	public int traverseNode(Board board) {
 		board.play(this.move);
 		double bestScore = -1;
@@ -137,9 +150,11 @@ public class SearchNode {
 		if (children.get(bestIndex).getPlayouts() == 0) {
 			win = children.get(bestIndex).playout(board);
 			if (this.color == win) {
-				winrate = (playouts * winrate + 1) / (playouts + 1);
+				winrate = (playouts * winrate + 1.0) / (playouts + 1.0);
 			} else if (win == -1) {
-				winrate = (playouts * winrate + 0.5) / (playouts + 1);
+				winrate = (playouts * winrate + 0.5) / (playouts + 1.0);
+			} else {
+				winrate = (playouts * winrate + 0.0) / (playouts + 1.0);
 			}
 			this.playouts++;
 			return win;
@@ -149,9 +164,11 @@ public class SearchNode {
 				win = this.traverseNode(board);
 			}
 			if (this.color == win) {
-				winrate = (playouts * winrate + 1) / (playouts + 1);
+				winrate = (playouts * winrate + 1.0) / (playouts + 1.0);
 			} else if (win == -1) {
-				winrate = (playouts * winrate + 0.5) / (playouts + 1);
+				winrate = (playouts * winrate + 0.5) / (playouts + 1.0);
+			} else {
+				winrate = (playouts * winrate + 0.0) / (playouts + 1.0);
 			}
 			this.playouts++;
 			return win;

@@ -1,7 +1,6 @@
 package gomoku_main;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class SearchTree {
 
@@ -13,18 +12,29 @@ public class SearchTree {
 		treeNodes = new ArrayList<SearchNode>();
 		totalPlayouts = 0;
 	}
-
-	public void createRootNodes(Board board) {
-		List<SearchNode> tempNodes = new ArrayList<SearchNode>();
-		for (int i = 0; i < board.getBoardArea(); i++) {
-			if (board.isLegalMove(i)) {
-				tempNodes.add(new SearchNode(i, board.getColorToPlay()));
+	
+	public void applyHeuristic(Board board) {
+		int winMove = WinHeuristic.getGoodMove(board);
+		if(winMove != -1) {
+			for(SearchNode n : treeNodes) {
+				if(n.getMove() == winMove) {
+					n.setWinRate(1.0);
+					n.setPlayouts(1);
+					n.setFinalNode(true);
+					break;
+				}
 			}
 		}
-		int size = tempNodes.size();
-		for (int i = 0; i < size; i++) {
-			int rand = (int) (Math.random() * tempNodes.size());
-			treeNodes.add(tempNodes.remove(rand));
+	}
+
+	public void createRootNodes(Board board, boolean useHeuristics) {
+		for (int i = 0; i < board.getBoardArea(); i++) {
+			if (board.isLegalMove(i)) {
+				treeNodes.add(new SearchNode(i, board.getColorToPlay()));
+			}
+		}
+		if(useHeuristics) {			
+			applyHeuristic(board);
 		}
 	}
 
@@ -63,7 +73,7 @@ public class SearchTree {
 
 				}
 			} else {
-				UCTScore = 0.5;
+				UCTScore = 0.45 + Math.random() * 0.1;
 			}
 			if (UCTScore > bestScore) {
 				bestScore = UCTScore;

@@ -88,14 +88,14 @@ public class Gomoku {
 	}
 
 	public static void main(String args[]) {
-		Player black = new Player(2000);
-		Player white = new Player(2000);
+		Player black = new Player(2000, true);
+		Player white = new Player(2000, true);
 		runGame(black, white);
 	}
 
 	public static void runExperiment() {
-		Player black = new Player(20000);
-		Player white = new Player(2000);
+		Player black = new Player(20000, true);
+		Player white = new Player(2000, true);
 		int blacksum = 0;
 		int firstties = 0;
 		int win;
@@ -107,8 +107,8 @@ public class Gomoku {
 				firstties += 1;
 			}
 		}
-		black = new Player(2000);
-		white = new Player(20000);
+		black = new Player(2000, true);
+		white = new Player(20000, true);
 		int whitesum = 0;
 		int secondties = 0;
 		for (int i = 0; i < 37; i++) {
