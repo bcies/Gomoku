@@ -8,7 +8,7 @@ public class SearchNode {
 	private int move;
 	private int color;
 	private int playouts;
-	private int wins;
+	private double winrate;
 	private boolean exhausted;
 	private ArrayList<SearchNode> children;
 
@@ -16,7 +16,7 @@ public class SearchNode {
 		this.move = move;
 		this.color = color;
 		playouts = 0;
-		wins = 0;
+		winrate = 0;
 		children = new ArrayList<SearchNode>();
 		this.exhausted = false;
 	}
@@ -47,8 +47,8 @@ public class SearchNode {
 		return playouts;
 	}
 
-	public int getWins() {
-		return wins;
+	public double getWinRate() {
+		return winrate;
 	}
 
 	public boolean isExhausted() {
@@ -57,7 +57,8 @@ public class SearchNode {
 
 	public int playout(Board board) {
 		int randMove;
-		this.playouts += 1;
+		int formerPlayouts = playouts;
+		playouts += 1;
 		Board tempBoard = new Board();
 		tempBoard.copyBoard(board);
 		while (!tempBoard.hasWinner()) {
@@ -66,7 +67,10 @@ public class SearchNode {
 		}
 		int winner = tempBoard.getWinner();
 		if (winner == color) {
-			wins += 1;
+			winrate = (formerPlayouts * winrate + 1) / playouts;
+		} if (winner == -1) {
+			// If the result is a tie.
+			winrate = (formerPlayouts * winrate + 0.5) / playouts;
 		}
 		return winner;
 	}
@@ -88,8 +92,7 @@ public class SearchNode {
 			if (children.get(i).isExhausted()) {
 				UCTScore = -2;
 			} else if (children.get(i).getPlayouts() != 0) {
-				double winRate = 1.0 * children.get(i).getWins()
-						/ children.get(i).getPlayouts();
+				double winRate = children.get(i).getWinRate();
 				UCTScore = winRate
 						+ SearchTree.UCTK
 						* Math.sqrt(Math.log(this.playouts)
@@ -110,7 +113,9 @@ public class SearchNode {
 		if (children.get(bestIndex).getPlayouts() == 0) {
 			win = children.get(bestIndex).playout(board);
 			if (this.color == win) {
-				this.wins++;
+				winrate = (playouts * winrate + 1) / (playouts + 1);
+			} else if (win == -1) {
+				winrate = (playouts * winrate + 0.5) / (playouts + 1);
 			}
 			this.playouts++;
 			return win;
@@ -120,7 +125,9 @@ public class SearchNode {
 				win = this.traverseNode(board);
 			}
 			if (this.color == win) {
-				this.wins++;
+				winrate = (playouts * winrate + 1) / (playouts + 1);
+			} else if (win == -1) {
+				winrate = (playouts * winrate + 0.5) / (playouts + 1);
 			}
 			this.playouts++;
 			return win;
@@ -158,7 +165,7 @@ public class SearchNode {
 		}
 		s += "Move: " + Board.indexToString(this.getMove()) + " Color: "
 				+ Board.colorToString(this.getColor()) + " Playouts: "
-				+ this.getPlayouts() + " Wins: " + this.getWins() + "\n";
+				+ this.getPlayouts() + " Winrate: " + this.getWinRate() + "\n";
 		if (this.children.size() != 0){
 			for (SearchNode child: children){
 				if (child.getPlayouts() != 0){

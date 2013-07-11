@@ -19,7 +19,7 @@ public class Player {
 		ArrayList<SearchNode> nodes = tree.getNodes();
 		int bestNodeIndex = 0;
 		for (int i = 1; i < nodes.size(); i++) {
-			if (nodes.get(i).getWins() > nodes.get(bestNodeIndex).getWins()) {
+			if (nodes.get(i).getWinRate() > nodes.get(bestNodeIndex).getWinRate()) {
 				bestNodeIndex = i;
 			}
 		}

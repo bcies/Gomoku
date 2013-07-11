@@ -52,8 +52,7 @@ public class SearchTree {
 		double UCTScore;
 		for (int i = 0; i < treeNodes.size(); i++) {
 			if (treeNodes.get(i).getPlayouts() != 0) {
-				double winRate = 1.0 * treeNodes.get(i).getWins()
-						/ treeNodes.get(i).getPlayouts();
+				double winRate = treeNodes.get(i).getWinRate();
 				UCTScore = winRate
 						+ UCTK
 						* Math.sqrt(Math.log(totalPlayouts)
