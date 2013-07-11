@@ -16,14 +16,18 @@ public class Gomoku {
 
 	public static int runGame(Player black, Player white) {
 		board = new Board();
+		boolean autoGame = false;
 		int win;
 		List<Double> turnTimes = new LinkedList<Double>();
 		String command;
 		StringTokenizer token;
 		Scanner in = new Scanner(System.in);
 		while (!board.hasWinner()) {
-			// command = in.nextLine();
-			command = "genmove";
+			if (!autoGame) {
+				command = in.nextLine();
+			} else {
+				command = "genmove";
+			}
 			if (command.contains("showboard")) {
 				System.out.println(board);
 				switch (board.getColorToPlay()) {
@@ -57,6 +61,8 @@ public class Gomoku {
 						+ Board.indexToString(playerMove));
 				System.out.println("Player took " + (int) turnTime + "ms");
 				board.play(playerMove);
+			} else if (command.contains("autogame")) {
+				autoGame = true;
 			} else if (command.contains("quit")) {
 				System.exit(0);
 			}
@@ -86,7 +92,7 @@ public class Gomoku {
 		Player white = new Player(2000);
 		runGame(black, white);
 	}
-	
+
 	public static void runExperiment() {
 		Player black = new Player(20000);
 		Player white = new Player(2000);

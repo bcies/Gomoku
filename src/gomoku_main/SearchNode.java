@@ -9,12 +9,14 @@ public class SearchNode {
 	private int color;
 	private int playouts;
 	private double winrate;
+	private boolean finalNode;
 	private boolean exhausted;
 	private ArrayList<SearchNode> children;
 
 	public SearchNode(int move, int color) {
 		this.move = move;
 		this.color = color;
+		finalNode = false;
 		playouts = 0;
 		winrate = 0;
 		children = new ArrayList<SearchNode>();
@@ -55,20 +57,38 @@ public class SearchNode {
 		return exhausted;
 	}
 
+	public boolean isFinalNode() {
+		return finalNode;
+	}
+
 	public int playout(Board board) {
 		int randMove;
 		int formerPlayouts = playouts;
 		playouts += 1;
 		Board tempBoard = new Board();
 		tempBoard.copyBoard(board);
+		tempBoard.play(move);
+		int winner = tempBoard.getWinner();
+		if (winner != Board.VACANT) {
+			finalNode = true;
+			if (winner == color) {
+				winrate = 1.0;
+			}
+			if (winner == -1) {
+				// If the result is a tie.
+				winrate = 0.5;
+			}
+			return winner;
+		}
 		while (!tempBoard.hasWinner()) {
 			randMove = (int) (Math.random() * tempBoard.getBoardArea());
 			tempBoard.play(randMove);
 		}
-		int winner = tempBoard.getWinner();
+		winner = tempBoard.getWinner();
 		if (winner == color) {
 			winrate = (formerPlayouts * winrate + 1) / playouts;
-		} if (winner == -1) {
+		}
+		if (winner == -1) {
 			// If the result is a tie.
 			winrate = (formerPlayouts * winrate + 0.5) / playouts;
 		}
@@ -93,10 +113,14 @@ public class SearchNode {
 				UCTScore = -2;
 			} else if (children.get(i).getPlayouts() != 0) {
 				double winRate = children.get(i).getWinRate();
-				UCTScore = winRate
-						+ SearchTree.UCTK
-						* Math.sqrt(Math.log(this.playouts)
-								/ children.get(i).getPlayouts());
+				if (children.get(i).isFinalNode()) {
+					UCTScore = 0.0;
+				} else {
+					UCTScore = winRate
+							+ SearchTree.UCTK
+							* Math.sqrt(Math.log(this.playouts)
+									/ children.get(i).getPlayouts());
+				}
 			} else {
 				UCTScore = 0.5;
 			}
@@ -158,17 +182,25 @@ public class SearchNode {
 	// }
 	// return winner;
 
+	public String toString() {
+		return toString(0);
+	}
+
 	public String toString(int height) {
 		String s = "";
-		for (int i = 0; i < height; i++){
+		for (int i = 0; i < height; i++) {
 			s += "   ";
 		}
 		s += "Move: " + Board.indexToString(this.getMove()) + " Color: "
 				+ Board.colorToString(this.getColor()) + " Playouts: "
-				+ this.getPlayouts() + " Winrate: " + this.getWinRate() + "\n";
-		if (this.children.size() != 0){
-			for (SearchNode child: children){
-				if (child.getPlayouts() != 0){
+				+ this.getPlayouts() + " Winrate: " + this.getWinRate();
+		if (finalNode) {
+			s += " Final Node.";
+		}
+		s += "\n";
+		if (this.children.size() != 0) {
+			for (SearchNode child : children) {
+				if (child.getPlayouts() != 0) {
 					s += child.toString(height + 1);
 				}
 			}

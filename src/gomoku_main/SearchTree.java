@@ -53,10 +53,15 @@ public class SearchTree {
 		for (int i = 0; i < treeNodes.size(); i++) {
 			if (treeNodes.get(i).getPlayouts() != 0) {
 				double winRate = treeNodes.get(i).getWinRate();
-				UCTScore = winRate
-						+ UCTK
-						* Math.sqrt(Math.log(totalPlayouts)
-								/ treeNodes.get(i).getPlayouts());
+				if (treeNodes.get(i).isFinalNode()) {
+					UCTScore = 0;
+				} else {
+					UCTScore = winRate
+							+ UCTK
+							* Math.sqrt(Math.log(totalPlayouts)
+									/ treeNodes.get(i).getPlayouts());
+
+				}
 			} else {
 				UCTScore = 0.5;
 			}
@@ -72,7 +77,7 @@ public class SearchTree {
 		} else {
 			treeNodes.get(bestIndex).traverseNode(tempBoard);
 		}
-		
+
 	}
 
 	public ArrayList<SearchNode> getNodes() {
@@ -94,7 +99,7 @@ public class SearchTree {
 		for (SearchNode node : treeNodes) {
 			if (node.getPlayouts() != 0) {
 				s += node.toString(0);
-				
+
 			}
 		}
 		return s;

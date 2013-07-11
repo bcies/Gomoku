@@ -16,12 +16,11 @@ public class Board {
 		board = new int[BOARD_AREA];
 		colorToPlay = BLACK;
 	}
-	
-	public static String colorToString(int color){
-		if (color == BLACK){
+
+	public static String colorToString(int color) {
+		if (color == BLACK) {
 			return "Black";
-		}
-		else {
+		} else {
 			return "White";
 		}
 	}

@@ -3,10 +3,10 @@ package gomoku_main;
 import java.util.ArrayList;
 
 public class Player {
-	
+
 	private int playouts;
-	
-	public Player(int playouts){
+
+	public Player(int playouts) {
 		this.playouts = playouts;
 	}
 
@@ -19,11 +19,12 @@ public class Player {
 		ArrayList<SearchNode> nodes = tree.getNodes();
 		int bestNodeIndex = 0;
 		for (int i = 1; i < nodes.size(); i++) {
-			if (nodes.get(i).getWinRate() > nodes.get(bestNodeIndex).getWinRate()) {
+			if (nodes.get(i).getWinRate() > nodes.get(bestNodeIndex)
+					.getWinRate()) {
 				bestNodeIndex = i;
 			}
 		}
-		if (showTree){
+		if (showTree) {
 			System.out.println(tree);
 		}
 		return nodes.get(bestNodeIndex).getMove();
