@@ -88,19 +88,19 @@ public class Gomoku {
 	}
 
 	public static void main(String args[]) {
-		Player black = new Player(10000, true, 1);
-		Player white = new Player(10000, true, 1);
-//		runExperiment();
+		Player black = new Player(50000, true, 1);
+		Player white = new Player(50000, true, 1);
+		//runExperiment();
 		runGame(black, white);
 	}
 
 	public static void runExperiment() {
-		Player black = new Player(20000, true,2);
-		Player white = new Player(20000, true,2);
+		Player black = new Player(20000, true,1);
+		Player white = new Player(20000, true,1);
 		int blacksum = 0;
 		int firstties = 0;
 		int win;
-		for (int i = 0; i < 240; i++) {
+		for (int i = 0; i < 120; i++) {
 			win = runGame(black, white);
 			if (win == Board.BLACK) {
 				blacksum += 1;
