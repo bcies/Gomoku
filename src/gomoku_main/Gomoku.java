@@ -88,9 +88,10 @@ public class Gomoku {
 	}
 
 	public static void main(String args[]) {
-		Player black = new Player(100000, true,0.1);
-		Player white = new Player(100000, true,0.1);
-		runExperiment();
+		Player black = new Player(100000, true, 1);
+		Player white = new Player(100000, true, 1);
+//		runExperiment();
+		runGame(black, white);
 	}
 
 	public static void runExperiment() {
