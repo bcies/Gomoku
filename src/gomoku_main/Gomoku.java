@@ -16,7 +16,7 @@ public class Gomoku {
 
 	public static int runGame(Player black, Player white) {
 		board = new Board();
-		boolean autoGame = false;
+		boolean autoGame = true;
 		int win;
 		List<Double> turnTimes = new LinkedList<Double>();
 		String command;
@@ -88,18 +88,18 @@ public class Gomoku {
 	}
 
 	public static void main(String args[]) {
-		Player black = new Player(2000, true);
-		Player white = new Player(2000, true);
-		runGame(black, white);
+		Player black = new Player(100000, true,0.1);
+		Player white = new Player(100000, true,0.1);
+		runExperiment();
 	}
 
 	public static void runExperiment() {
-		Player black = new Player(20000, true);
-		Player white = new Player(2000, true);
+		Player black = new Player(20000, true,2);
+		Player white = new Player(20000, true,2);
 		int blacksum = 0;
 		int firstties = 0;
 		int win;
-		for (int i = 0; i < 37; i++) {
+		for (int i = 0; i < 240; i++) {
 			win = runGame(black, white);
 			if (win == Board.BLACK) {
 				blacksum += 1;
@@ -107,27 +107,27 @@ public class Gomoku {
 				firstties += 1;
 			}
 		}
-		black = new Player(2000, true);
-		white = new Player(20000, true);
-		int whitesum = 0;
-		int secondties = 0;
-		for (int i = 0; i < 37; i++) {
-			win = runGame(black, white);
-			if (win == Board.WHITE) {
-				whitesum += 1;
-			} else if (win == Board.VACANT) {
-				secondties += 1;
-			}
-		}
+//		black = new Player(20000, true,1);
+//		white = new Player(20000, true,2);
+//		int whitesum = 0;
+//		int secondties = 0;
+//		for (int i = 0; i < 120; i++) {
+//			win = runGame(black, white);
+//			if (win == Board.WHITE) {
+//				whitesum += 1;
+//			} else if (win == Board.VACANT) {
+//				secondties += 1;
+//			}
+//		}
 		System.out.println("\n");
 		System.out
-				.println("First 37 games: black has 20,000 playouts and white has 2000 playouts");
+				.println("First  120 games: UCT value = 2");
 		System.out.println("Black won " + blacksum + " games");
 		System.out.println("Ties: " + firstties);
-		System.out
-				.println("\nSecond 37 games: black has 2000 playouts and white has 20,000 playouts");
-		System.out.println("White won " + whitesum + " games");
-		System.out.println("Ties: " + secondties);
+//		System.out
+//				.println("\nSecond 120 games: UCT new = black");
+//		System.out.println("White won " + whitesum + " games");
+//		System.out.println("Ties: " + secondties);
 
 		try {
 			File file = new File("results.txt");
@@ -136,12 +136,12 @@ public class Gomoku {
 			}
 			OutputStream outStream = new FileOutputStream(file);
 			Writer out = new OutputStreamWriter(outStream);
-			out.write("First 37 games: black has 20,000 playouts and white has 2000 playouts");
+			out.write("First 120 games: UCT new = white");
 			out.write("Black won " + blacksum + " games");
 			out.write("Ties: " + firstties);
-			out.write("\nSecond 37 games: black has 2000 playouts and white has 20,000 playouts");
-			out.write("White won " + whitesum + " games");
-			out.write("Ties: " + secondties);
+//			out.write("\nSecond 120 games: UCT new = black");
+//			out.write("White won " + whitesum + " games");
+//			out.write("Ties: " + secondties);
 			out.close();
 
 		} catch (Exception e) {

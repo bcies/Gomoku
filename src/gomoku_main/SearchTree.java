@@ -6,7 +6,7 @@ public class SearchTree {
 
 	ArrayList<SearchNode> treeNodes;
 	private int totalPlayouts;
-	public static final double UCTK = 0.1;
+	public double UCTK = 0.1;
 
 	public SearchTree() {
 		treeNodes = new ArrayList<SearchNode>();
@@ -26,8 +26,9 @@ public class SearchTree {
 			}
 		}
 	}
+	
 
-	public void createRootNodes(Board board, boolean useHeuristics) {
+	public void createRootNodes(Board board, boolean useHeuristics, double UCT) {
 		for (int i = 0; i < board.getBoardArea(); i++) {
 			if (board.isLegalMove(i)) {
 				treeNodes.add(new SearchNode(i, board.getColorToPlay()));
@@ -36,6 +37,7 @@ public class SearchTree {
 		if(useHeuristics) {			
 			applyHeuristic(board);
 		}
+		UCTK = UCT;
 	}
 
 	public void expandTree(Board board) {
@@ -50,7 +52,7 @@ public class SearchTree {
 			treeNodes.add(new SearchNode(move, tempBoard.getColorToPlay()));
 			treeNodes.get(treeNodes.size() - 1).playout(tempBoard);
 		} else {
-			treeNodes.get(index).traverseNode(tempBoard);
+			treeNodes.get(index).traverseNode(tempBoard, UCTK);
 		}
 	}
 
@@ -85,7 +87,7 @@ public class SearchTree {
 			treeNodes.get(bestIndex).playout(tempBoard);
 			totalPlayouts++;
 		} else {
-			treeNodes.get(bestIndex).traverseNode(tempBoard);
+			treeNodes.get(bestIndex).traverseNode(tempBoard, UCTK);
 		}
 
 	}

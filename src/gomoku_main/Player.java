@@ -6,15 +6,16 @@ public class Player {
 
 	private int playouts;
 	private boolean useHeuristics;
+	private int UCT;
 
-	public Player(int playouts, boolean useHeuristics) {
+	public Player(int playouts, boolean useHeuristics, double UCT) {
 		this.playouts = playouts;
 		this.useHeuristics = useHeuristics;
 	}
 
 	public int getBestMove(Board board, boolean showTree) {
 		SearchTree tree = new SearchTree();
-		tree.createRootNodes(board, useHeuristics);
+		tree.createRootNodes(board, useHeuristics, UCT);
 		for (int i = 0; i < playouts; i++) {
 			tree.expandUCTTree(board);
 		}
