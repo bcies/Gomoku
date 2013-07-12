@@ -16,7 +16,7 @@ public class Gomoku {
 
 	public static int runGame(Player black, Player white) {
 		board = new Board();
-		boolean autoGame = true;
+		boolean autoGame = false;
 		int win;
 		List<Double> turnTimes = new LinkedList<Double>();
 		String command;
