@@ -108,7 +108,7 @@ public class SearchNode {
 		winrate = value;
 	}
 	
-	public int traverseNode(Board board) {
+	public int traverseNode(Board board, double UCT) {
 		board.play(this.move);
 		double bestScore = -1;
 		int bestIndex = -1;
@@ -130,7 +130,7 @@ public class SearchNode {
 					UCTScore = 0.0;
 				} else {
 					UCTScore = winRate
-							+ SearchTree.UCTK
+							+ UCT
 							* Math.sqrt(Math.log(this.playouts)
 									/ children.get(i).getPlayouts());
 				}
@@ -159,9 +159,9 @@ public class SearchNode {
 			this.playouts++;
 			return win;
 		} else {
-			win = children.get(bestIndex).traverseNode(board);
+			win = children.get(bestIndex).traverseNode(board, UCT);
 			if (win == -2) {
-				win = this.traverseNode(board);
+				win = this.traverseNode(board, UCT);
 			}
 			if (this.color == win) {
 				winrate = (playouts * winrate + 1.0) / (playouts + 1.0);
