@@ -27,9 +27,7 @@ public class PlayerTest {
 		board.play("f6");
 		board.play("f2");
 		board.play("a4");
-		String s = board.indexToString(player.getBestMove(board, true));
-		System.out.println(board);
-		assertEquals("g2", s);
+		assertEquals("g2", board.indexToString(player.getBestMove(board, false)));
 	}
 
 	@Test
@@ -43,6 +41,19 @@ public class PlayerTest {
 		board.play("f6");
 		board.play("f2");
 		assertEquals("g2", board.indexToString(player.getBestMove(board, false)));
+	}
+	
+	@Test
+	public void testBlock3Chain() {
+		board.play("b2");
+		board.play("c2");
+		board.play("e5");
+		board.play("d2");
+		board.play("a1");
+		board.play("e2");
+		board.play("f6");
+		board.play("f9");
+		assertEquals("f2", board.indexToString(player.getBestMove(board, false)));
 	}
 
 }

@@ -6,7 +6,7 @@ public class Board {
 	public static final int BLACK = 1;
 	public static final int WHITE = 2;
 
-	private static final int BOARD_WIDTH = 9;
+	private static final int BOARD_WIDTH = 19;
 	private int BOARD_AREA;
 	private int[] board;
 	private int colorToPlay;
