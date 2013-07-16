@@ -6,18 +6,24 @@ public class Player {
 
 	private int playouts;
 	private boolean useHeuristics;
+	private boolean UCB;
 	private int UCT;
 
-	public Player(int playouts, boolean useHeuristics, double UCT) {
+	public Player(int playouts, boolean useHeuristics, boolean UCB, double UCT) {
 		this.playouts = playouts;
 		this.useHeuristics = useHeuristics;
+		this.UCB = UCB;
 	}
 
 	public int getBestMove(Board board, boolean showTree) {
 		SearchTree tree = new SearchTree();
 		tree.createRootNodes(board, useHeuristics, UCT);
 		for (int i = 0; i < playouts; i++) {
-			tree.expandUCTTree(board);
+			if (UCB) {
+				tree.expandUCBTunedTree(board);
+			} else {
+				tree.expandUCTTree(board);
+			}
 		}
 		ArrayList<SearchNode> nodes = tree.getNodes();
 		int bestNodeIndex = 0;

@@ -8,6 +8,7 @@ public class SearchNode {
 	private int move;
 	private int color;
 	private int playouts;
+	private double lastWin;
 	private double winrate;
 	private boolean finalNode;
 	private boolean exhausted;
@@ -21,6 +22,7 @@ public class SearchNode {
 		winrate = 0;
 		children = new ArrayList<SearchNode>();
 		this.exhausted = false;
+		lastWin = 0;
 	}
 
 	public void createChildrenNodes(Board board) {
@@ -39,6 +41,10 @@ public class SearchNode {
 
 	public int getColor() {
 		return color;
+	}
+
+	public double getLastWin() {
+		return lastWin;
 	}
 
 	public int getMove() {
@@ -87,19 +93,22 @@ public class SearchNode {
 		winner = tempBoard.getWinner();
 		if (winner == color) {
 			winrate = (formerPlayouts * winrate + 1.0) / (playouts * 1.0);
-		}else if (winner == -1) {
+			lastWin = 1.0;
+		} else if (winner == -1) {
 			// If the result is a tie.
 			winrate = (formerPlayouts * winrate + 0.5) / (playouts * 1.0);
+			lastWin = 0.5;
 		} else {
 			winrate = (formerPlayouts * winrate + 0.0) / (playouts * 1.0);
+			lastWin = 0.0;
 		}
 		return winner;
 	}
-	
+
 	public void setFinalNode(boolean b) {
 		finalNode = b;
 	}
-	
+
 	public void setPlayouts(int value) {
 		playouts = value;
 	}
@@ -107,8 +116,91 @@ public class SearchNode {
 	public void setWinRate(double value) {
 		winrate = value;
 	}
+
+	public int traverseNodeUCB(Board board, double UCT) {
+		board.play(this.move);
+		double bestScore = -1;
+		int bestIndex = -1;
+		int win;
+		double UCTScore;
+		if (this.playouts <= 1) {
+			createChildrenNodes(board);
+		}
+		if (children.size() == 0) {
+			this.exhausted = true;
+			return -2;
+		}
+		for (int i = 0; i < children.size(); i++) {
+			if (children.get(i).isExhausted()) {
+				UCTScore = -2;
+			} else if (children.get(i).getPlayouts() != 0) {
+				double winRate = children.get(i).getWinRate();
+				if (children.get(i).isFinalNode()) {
+					UCTScore = 0.0;
+				} else {
+					UCTScore = winRate
+							+ Math.sqrt((Math.log(playouts) / children.get(i)
+									.getPlayouts())
+									* Math.min(
+											0.25,
+											winRate
+													- children.get(i)
+															.getLastWin()
+													+ Math.sqrt((2 * Math
+															.log(playouts))
+															/ children
+																	.get(i)
+																	.getPlayouts())));
+				}
+			} else {
+				UCTScore = 0.5;
+			}
+			if (UCTScore > bestScore) {
+				bestScore = UCTScore;
+				bestIndex = i;
+			}
+		}
+		if (bestIndex == -1) {
+			this.exhausted = true;
+			return -2;
+		}
+
+		if (children.get(bestIndex).getPlayouts() == 0) {
+			win = children.get(bestIndex).playout(board);
+			if (this.color == win) {
+				winrate = (playouts * winrate + 1.0) / (playouts + 1.0);
+				lastWin = 1.0;
+			} else if (win == -1) {
+				winrate = (playouts * winrate + 0.5) / (playouts + 1.0);
+				lastWin = 0.5;
+			} else {
+				winrate = (playouts * winrate + 0.0) / (playouts + 1.0);
+				lastWin = 0.0;
+			}
+			this.playouts++;
+			return win;
+		} else {
+			win = children.get(bestIndex).traverseNodeUCB(board, UCT);
+			if (win == -2) {
+				win = this.traverseNodeUCB(board, UCT);
+			}
+			if (this.color == win) {
+				winrate = (playouts * winrate + 1.0) / (playouts + 1.0);
+				lastWin = 1.0;
+			} else if (win == -1) {
+				winrate = (playouts * winrate + 0.5) / (playouts + 1.0);
+				lastWin = 0.5;
+			} else {
+				winrate = (playouts * winrate + 0.0) / (playouts + 1.0);
+				lastWin = 0.0;
+			}
+			this.playouts++;
+			return win;
+		}
+
+	}
 	
-	public int traverseNode(Board board, double UCT) {
+	public int traverseNodeUCT(Board board, double UCT) {
 		board.play(this.move);
 		double bestScore = -1;
 		int bestIndex = -1;
@@ -151,24 +243,30 @@ public class SearchNode {
 			win = children.get(bestIndex).playout(board);
 			if (this.color == win) {
 				winrate = (playouts * winrate + 1.0) / (playouts + 1.0);
+				lastWin = 1.0;
 			} else if (win == -1) {
 				winrate = (playouts * winrate + 0.5) / (playouts + 1.0);
+				lastWin = 0.5;
 			} else {
 				winrate = (playouts * winrate + 0.0) / (playouts + 1.0);
+				lastWin = 0.0;
 			}
 			this.playouts++;
 			return win;
 		} else {
-			win = children.get(bestIndex).traverseNode(board, UCT);
+			win = children.get(bestIndex).traverseNodeUCT(board, UCT);
 			if (win == -2) {
-				win = this.traverseNode(board, UCT);
+				win = this.traverseNodeUCT(board, UCT);
 			}
 			if (this.color == win) {
 				winrate = (playouts * winrate + 1.0) / (playouts + 1.0);
+				lastWin = 1.0;
 			} else if (win == -1) {
 				winrate = (playouts * winrate + 0.5) / (playouts + 1.0);
+				lastWin = 0.5;
 			} else {
 				winrate = (playouts * winrate + 0.0) / (playouts + 1.0);
+				lastWin = 0.0;
 			}
 			this.playouts++;
 			return win;

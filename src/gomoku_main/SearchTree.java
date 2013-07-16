@@ -12,12 +12,12 @@ public class SearchTree {
 		treeNodes = new ArrayList<SearchNode>();
 		totalPlayouts = 0;
 	}
-	
+
 	public void applyHeuristic(Board board) {
 		int winMove = WinHeuristic.getGoodMove(board);
-		if(winMove != -1) {
-			for(SearchNode n : treeNodes) {
-				if(n.getMove() == winMove) {
+		if (winMove != -1) {
+			for (SearchNode n : treeNodes) {
+				if (n.getMove() == winMove) {
 					n.setWinRate(1.0);
 					n.setPlayouts(1);
 					n.setFinalNode(true);
@@ -26,7 +26,6 @@ public class SearchTree {
 			}
 		}
 	}
-	
 
 	public void createRootNodes(Board board, boolean useHeuristics, double UCT) {
 		for (int i = 0; i < board.getBoardArea(); i++) {
@@ -34,7 +33,7 @@ public class SearchTree {
 				treeNodes.add(new SearchNode(i, board.getColorToPlay()));
 			}
 		}
-		if(useHeuristics) {			
+		if (useHeuristics) {
 			applyHeuristic(board);
 		}
 		UCTK = UCT;
@@ -52,7 +51,7 @@ public class SearchTree {
 			treeNodes.add(new SearchNode(move, tempBoard.getColorToPlay()));
 			treeNodes.get(treeNodes.size() - 1).playout(tempBoard);
 		} else {
-			treeNodes.get(index).traverseNode(tempBoard, UCTK);
+			treeNodes.get(index).traverseNodeUCT(tempBoard, UCTK);
 		}
 	}
 
@@ -87,9 +86,53 @@ public class SearchTree {
 			treeNodes.get(bestIndex).playout(tempBoard);
 			totalPlayouts++;
 		} else {
-			treeNodes.get(bestIndex).traverseNode(tempBoard, UCTK);
+			treeNodes.get(bestIndex).traverseNodeUCT(tempBoard, UCTK);
 		}
 
+	}
+
+	public void expandUCBTunedTree(Board board) {
+		Board tempBoard = new Board();
+		tempBoard.copyBoard(board);
+		double bestScore = 0;
+		int bestIndex = 0;
+		double UCBScore;
+		for (int i = 0; i < treeNodes.size(); i++) {
+			if (treeNodes.get(i).getPlayouts() != 0) {
+				double winRate = treeNodes.get(i).getWinRate();
+				if (treeNodes.get(i).isFinalNode()) {
+					UCBScore = 0;
+				} else {
+					UCBScore = winRate
+							+ Math.sqrt(((Math.log(totalPlayouts)) / treeNodes
+									.get(i).getPlayouts())
+									* Math.min(
+											0.25,
+											treeNodes.get(i).getWinRate()
+													- treeNodes.get(i)
+															.getLastWin()
+													+ Math.sqrt((2 * Math
+															.log(totalPlayouts))
+															/ treeNodes
+																	.get(i)
+																	.getPlayouts())));
+
+				}
+			} else {
+				UCBScore = 0.45 + Math.random() * 0.1;
+			}
+			if (UCBScore > bestScore) {
+				bestScore = UCBScore;
+				bestIndex = i;
+			}
+		}
+
+		if (treeNodes.get(bestIndex).getPlayouts() == 0) {
+			treeNodes.get(bestIndex).playout(tempBoard);
+			totalPlayouts++;
+		} else {
+			treeNodes.get(bestIndex).traverseNodeUCB(tempBoard, UCTK);
+		}
 	}
 
 	public ArrayList<SearchNode> getNodes() {
