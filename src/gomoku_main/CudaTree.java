@@ -4,10 +4,10 @@ import java.util.ArrayList;
 
 public class CudaTree extends SearchTree{
 	
-	ArrayList<CudaNode> treeNodes;
+
 	
 	public CudaTree() {
-		treeNodes = new ArrayList<CudaNode>();
+		treeNodes = new ArrayList<SearchNode>();
 		totalPlayouts = 0;
 	}
 	
@@ -58,10 +58,12 @@ public class CudaTree extends SearchTree{
 			}
 		}
 		if (treeNodes.get(bestIndex).getPlayouts() == 0) {
-			treeNodes.get(bestIndex).playout(tempBoard, blocks, threads);
+			CudaNode node = (CudaNode) treeNodes.get(bestIndex);
+			node.playout(tempBoard, blocks, threads);
 			totalPlayouts += blocks * threads;
 		} else {
-			treeNodes.get(bestIndex).traverseNode(tempBoard, blocks, threads);
+			CudaNode node = (CudaNode) treeNodes.get(bestIndex);
+			node.traverseNode(tempBoard, blocks, threads);
 		}
 	}
 
