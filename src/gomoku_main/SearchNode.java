@@ -5,14 +5,14 @@ import java.util.List;
 
 public class SearchNode {
 
-	private int move;
-	private int color;
-	private int playouts;
-	private double lastWin;
-	private double winrate;
-	private boolean finalNode;
-	private boolean exhausted;
-	private ArrayList<SearchNode> children;
+	protected int move;
+	protected int color;
+	protected int playouts;
+	protected double lastWin;
+	protected double winrate;
+	protected boolean finalNode;
+	protected boolean exhausted;
+	protected ArrayList<SearchNode> children;
 
 	public SearchNode(int move, int color) {
 		this.move = move;

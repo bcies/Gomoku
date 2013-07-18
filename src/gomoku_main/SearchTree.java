@@ -5,7 +5,7 @@ import java.util.ArrayList;
 public class SearchTree {
 
 	ArrayList<SearchNode> treeNodes;
-	private int totalPlayouts;
+	protected int totalPlayouts;
 	public double UCTK = 0.1;
 
 	public SearchTree() {

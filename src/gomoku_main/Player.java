@@ -9,6 +9,8 @@ public class Player {
 	private boolean UCB;
 	private int UCT;
 	private int turnPlayouts;
+	private int blocks;
+	private int threads;
 
 	public Player(double timePerMove, boolean useHeuristics, boolean UCB,
 			double UCT) {
@@ -16,22 +18,38 @@ public class Player {
 		this.useHeuristics = useHeuristics;
 		this.UCB = UCB;
 		turnPlayouts = 0;
+		blocks = 0;
+		threads = 0;
 	}
 
 	public int getBestMove(Board board, boolean showTree) {
 		turnPlayouts = 0;
-		SearchTree tree = new SearchTree();
-		tree.createRootNodes(board, useHeuristics, UCT);
-		long currentTime = System.nanoTime();
-		long finishTime = (long) (timePerMove * 1000000000) + currentTime;
-		while (currentTime < finishTime) {
-			if (UCB) {
-				tree.expandUCBTunedTree(board);
-			} else {
-				tree.expandUCTTree(board);
+		SearchTree tree;
+		if (blocks == 0) {			
+			tree = new SearchTree();
+			tree.createRootNodes(board, useHeuristics, UCT);
+			long currentTime = System.nanoTime();
+			long finishTime = (long) (timePerMove * 1000000000) + currentTime;
+			while (currentTime < finishTime) {
+				if (UCB) {
+					tree.expandUCBTunedTree(board);
+				} else {
+					tree.expandUCTTree(board);
+				}
+				turnPlayouts++;
+				currentTime = System.nanoTime();
 			}
-			turnPlayouts++;
-			currentTime = System.nanoTime();
+		} else {
+			CudaTree cudaTree = new CudaTree();
+			cudaTree.createRootNodes(board, useHeuristics);
+			long currentTime = System.nanoTime();
+			long finishTime = (long) (timePerMove * 1000000000) + currentTime;
+			while (currentTime < finishTime) {
+				cudaTree.expandTree(board, blocks, threads);
+				turnPlayouts++;
+				currentTime = System.nanoTime();
+			}
+			tree = cudaTree;
 		}
 		ArrayList<SearchNode> nodes = tree.getNodes();
 		int bestNodeIndex = 0;
@@ -49,6 +67,11 @@ public class Player {
 
 	public int getPlayouts() {
 		return turnPlayouts;
+	}
+	
+	public void setCuda(int blocks, int threads) {
+		this.blocks = blocks;
+		this.threads = threads;
 	}
 
 	public boolean setTimePerMove(double time) {
