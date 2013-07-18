@@ -2,11 +2,15 @@ package gomoku_main;
 
 import java.util.ArrayList;
 import java.util.List;
+import static jcuda.driver.JCudaDriver.*;
+import jcuda.*;
+import jcuda.driver.*;
+import jcuda.runtime.JCuda;
 
-public class CudaNode extends SearchNode{
-	
+public class CudaNode extends SearchNode {
+
 	protected ArrayList<CudaNode> children;
-	
+
 	public CudaNode(int move, int color) {
 		super(move, color);
 	}
@@ -24,12 +28,26 @@ public class CudaNode extends SearchNode{
 			children.add(tempNodes.remove(rand));
 		}
 	}
-	
+
 	public double playout(Board board, int blocks, int threads) {
-		
+		int blocksxthreads = blocks * threads;
+		int[] rand = new int[blocksxthreads];
+		for (int i = 0; i < blocksxthreads; i++) {
+			int randTemp = (int) (Math.random() * board.getBoardArea());
+			if (board.isLegalMove(randTemp))
+				rand[i] = randTemp;
+		}
+
+//		// first device
+//		cuInit(0);
+//		CUcontext pctx = new CUcontext();
+//		CUdevice dev = new CUdevice();
+//		cuDeviceGet(dev, 0);
+//		cuCtxCreate(pctx, 0, dev);
+
 		return -1;
 	}
-	
+
 	public double traverseNode(Board board, int blocks, int threads) {
 		board.play(this.move);
 		double bestScore = -1;
