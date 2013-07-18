@@ -199,7 +199,7 @@ public class SearchNode {
 		}
 
 	}
-	
+
 	public int traverseNodeUCT(Board board, double UCT) {
 		board.play(this.move);
 		double bestScore = -1;

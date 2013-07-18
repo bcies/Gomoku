@@ -36,11 +36,11 @@ public class Board {
 	public int[] getBoard() {
 		return board;
 	}
-	
+
 	public int getPoint(int x, int y) {
 		return getPoint(getBoardIndex(x, y));
 	}
-	
+
 	public int getPoint(int index) {
 		return board[index];
 	}

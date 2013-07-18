@@ -12,7 +12,7 @@ public class PlayerTest {
 
 	@Before
 	public void setUp() throws Exception {
-		player = new Player(100, true, 0.1);
+		player = new Player(0.5, true, true, 0.1);
 		board = new Board();
 	}
 
@@ -27,7 +27,8 @@ public class PlayerTest {
 		board.play("f6");
 		board.play("f2");
 		board.play("a4");
-		assertEquals("g2", board.indexToString(player.getBestMove(board, false)));
+		assertEquals("g2",
+				board.indexToString(player.getBestMove(board, false)));
 	}
 
 	@Test
@@ -40,9 +41,10 @@ public class PlayerTest {
 		board.play("e2");
 		board.play("f6");
 		board.play("f2");
-		assertEquals("g2", board.indexToString(player.getBestMove(board, false)));
+		assertEquals("g2",
+				board.indexToString(player.getBestMove(board, false)));
 	}
-	
+
 	@Test
 	public void testBlock3Chain() {
 		board.play("b2");
@@ -53,7 +55,8 @@ public class PlayerTest {
 		board.play("e2");
 		board.play("f6");
 		board.play("f9");
-		assertEquals("f2", board.indexToString(player.getBestMove(board, false)));
+		assertEquals("f2",
+				board.indexToString(player.getBestMove(board, false)));
 	}
 
 }

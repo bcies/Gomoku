@@ -4,26 +4,34 @@ import java.util.ArrayList;
 
 public class Player {
 
-	private int playouts;
+	private double timePerMove;
 	private boolean useHeuristics;
 	private boolean UCB;
 	private int UCT;
+	private int turnPlayouts;
 
-	public Player(int playouts, boolean useHeuristics, boolean UCB, double UCT) {
-		this.playouts = playouts;
+	public Player(double timePerMove, boolean useHeuristics, boolean UCB,
+			double UCT) {
+		this.timePerMove = timePerMove;
 		this.useHeuristics = useHeuristics;
 		this.UCB = UCB;
+		turnPlayouts = 0;
 	}
 
 	public int getBestMove(Board board, boolean showTree) {
+		turnPlayouts = 0;
 		SearchTree tree = new SearchTree();
 		tree.createRootNodes(board, useHeuristics, UCT);
-		for (int i = 0; i < playouts; i++) {
+		long currentTime = System.nanoTime();
+		long finishTime = (long) (timePerMove * 1000000000) + currentTime;
+		while (currentTime < finishTime) {
 			if (UCB) {
 				tree.expandUCBTunedTree(board);
 			} else {
 				tree.expandUCTTree(board);
 			}
+			turnPlayouts++;
+			currentTime = System.nanoTime();
 		}
 		ArrayList<SearchNode> nodes = tree.getNodes();
 		int bestNodeIndex = 0;
@@ -37,5 +45,17 @@ public class Player {
 			System.out.println(tree);
 		}
 		return nodes.get(bestNodeIndex).getMove();
+	}
+
+	public int getPlayouts() {
+		return turnPlayouts;
+	}
+
+	public boolean setTimePerMove(double time) {
+		if (time > 0) {
+			timePerMove = time;
+			return true;
+		}
+		return false;
 	}
 }
