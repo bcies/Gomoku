@@ -38,12 +38,7 @@ public class CudaNode extends SearchNode {
 				rand[i] = randTemp;
 		}
 
-//		// first device
-//		cuInit(0);
-//		CUcontext pctx = new CUcontext();
-//		CUdevice dev = new CUdevice();
-//		cuDeviceGet(dev, 0);
-//		cuCtxCreate(pctx, 0, dev);
+
 
 		return -1;
 	}
