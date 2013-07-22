@@ -133,7 +133,7 @@ extern "C" __global__ void playout(int *rands, int *numRands, int *board,
 			}
 
 			//check if board is full
-			for (int i = 0; i < (9 * 9); i++) {
+			for (int i = 0; i < (l_width * l_width); i++) {
 				if (tempBoard[i] == 0) {
 					boardFull = 0;
 					break;
