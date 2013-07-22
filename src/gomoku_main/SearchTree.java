@@ -76,6 +76,7 @@ public class SearchTree {
 			} else {
 				UCTScore = 0.45 + Math.random() * 0.1;
 			}
+			System.out.println("i value: " + i + ", UCTScore: " + UCTScore);
 			if (UCTScore > bestScore) {
 				bestScore = UCTScore;
 				bestIndex = i;
@@ -98,7 +99,9 @@ public class SearchTree {
 		int bestIndex = 0;
 		double UCBScore;
 		for (int i = 0; i < treeNodes.size(); i++) {
-			if (treeNodes.get(i).getPlayouts() != 0) {
+			if (treeNodes.get(i).isExhausted()) {
+				UCBScore = -2;
+			} else if (treeNodes.get(i).getPlayouts() != 0) {
 				double winRate = treeNodes.get(i).getWinRate();
 				if (treeNodes.get(i).isFinalNode()) {
 					UCBScore = 0;
@@ -121,6 +124,7 @@ public class SearchTree {
 			} else {
 				UCBScore = 0.45 + Math.random() * 0.1;
 			}
+			System.out.println("i value: " + i + ", UCBScore: " + UCBScore);
 			if (UCBScore > bestScore) {
 				bestScore = UCBScore;
 				bestIndex = i;

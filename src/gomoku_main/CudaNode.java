@@ -12,31 +12,10 @@ import jcuda.driver.*;
 import jcuda.runtime.JCuda;
 
 public class CudaNode extends SearchNode {
+	
+	protected static CUfunction function;
 
-	public CudaNode(int move, int color) {
-		super(move, color);
-	}
-
-	public void createChildrenNodes(Board board) {
-		List<CudaNode> tempNodes = new ArrayList<CudaNode>();
-		for (int i = 0; i < board.getBoardArea(); i++) {
-			if (board.isLegalMove(i)) {
-				tempNodes.add(new CudaNode(i, board.getColorToPlay()));
-			}
-		}
-		int size = tempNodes.size();
-		for (int i = 0; i < size; i++) {
-			int rand = (int) (Math.random() * tempNodes.size());
-			children.add(tempNodes.remove(rand));
-		}
-	}
-
-	public double playout(Board board, int blocks, int threads) {
-		int blocksxthreads = blocks * threads;
-		int[] rand = new int[blocksxthreads];
-		for (int i = 0; i < blocksxthreads; i++) {
-			rand[i] = i % board.getBoardArea();
-		}
+	public static void prepareGPU() {
 		// Note the following CUDA code came from
 		// http://www.jcuda.org/samples/samples.html
 		// Enable exceptions and omit all subsequent error checks
@@ -63,15 +42,60 @@ public class CudaNode extends SearchNode {
 		cuModuleLoad(module, ptxFileName);
 
 		// Obtain a function pointer to the "add" function.
-		CUfunction function = new CUfunction();
+		function = new CUfunction();
 		cuModuleGetFunction(function, module, "playout");
+
+	}
+
+	public CudaNode(int move, int color) {
+		super(move, color);
+	}
+
+	public void createChildrenNodes(Board board) {
+		List<CudaNode> tempNodes = new ArrayList<CudaNode>();
+		for (int i = 0; i < board.getBoardArea(); i++) {
+			if (board.isLegalMove(i)) {
+				tempNodes.add(new CudaNode(i, board.getColorToPlay()));
+			}
+		}
+		int size = tempNodes.size();
+		for (int i = 0; i < size; i++) {
+			int rand = (int) (Math.random() * tempNodes.size());
+			children.add(tempNodes.remove(rand));
+		}
+	}
+
+	public double playout(Board board, int blocks, int threads) {
+		System.out.println("Doing playout");
+		int blocksxthreads = blocks * threads;
+		Board tempBoard = new Board();
+		tempBoard.copyBoard(board);
+		tempBoard.play(move);
+		int formerPlayouts = this.playouts;
+		playouts += blocksxthreads;
+		int winner = tempBoard.getWinner();
+		if (winner != Board.VACANT) {
+			finalNode = true;
+			if (winner == color) {
+				winrate = 1.0;
+			}
+			if (winner == -1) {
+				// If the result is a tie.
+				winrate = 0.5;
+			}
+			return blocksxthreads - winrate * blocksxthreads;
+		}
+		int[] rand = new int[blocksxthreads];
+		for (int i = 0; i < blocksxthreads; i++) {
+			rand[i] = i % board.getBoardArea();
+		}
 
 		// Allocate the device input data, and copy the
 		// host input data to the device
 		CUdeviceptr d_rand = new CUdeviceptr();
 		cuMemAlloc(d_rand, Sizeof.INT * rand.length);
 		cuMemcpyHtoD(d_rand, Pointer.to(rand), Sizeof.INT * rand.length);
-		
+
 		int randNum[] = { rand.length };
 		CUdeviceptr d_randNum = new CUdeviceptr();
 		cuMemAlloc(d_randNum, Sizeof.INT);
@@ -79,14 +103,14 @@ public class CudaNode extends SearchNode {
 
 		CUdeviceptr d_board = new CUdeviceptr();
 		cuMemAlloc(d_board, Sizeof.INT * board.getBoardArea());
-		cuMemcpyHtoD(d_board, Pointer.to(board.getBoard()),
+		cuMemcpyHtoD(d_board, Pointer.to(tempBoard.getBoard()),
 				Sizeof.INT * board.getBoardArea());
-		
+
 		int boardWidth[] = { board.getBoardWidth() };
 		CUdeviceptr d_boardWidth = new CUdeviceptr();
 		cuMemAlloc(d_boardWidth, Sizeof.INT);
 		cuMemcpyHtoD(d_boardWidth, Pointer.to(boardWidth), Sizeof.INT);
-		
+
 		int color[] = { board.getColorToPlay() };
 		CUdeviceptr d_color = new CUdeviceptr();
 		cuMemAlloc(d_color, Sizeof.INT);
@@ -102,29 +126,25 @@ public class CudaNode extends SearchNode {
 		// of pointers which point to the actual values.
 		Pointer kernelParameters = Pointer.to(Pointer.to(d_rand),
 				Pointer.to(d_randNum), Pointer.to(d_board),
-				Pointer.to(d_boardWidth), Pointer.to(d_color), Pointer.to(d_wins));
+				Pointer.to(d_boardWidth), Pointer.to(d_color),
+				Pointer.to(d_wins));
 
 		// Call the kernel function.
 		cuLaunchKernel(function, blocks, 1, 1, threads, 1, 1, 0, null,
 				kernelParameters, null);
 		cuCtxSynchronize();
-		
-		
-		
+
 		cuMemcpyDtoH(Pointer.to(wins), d_wins, Sizeof.FLOAT);
-		
-		System.out.println(wins[0]);
+
+		// System.out.println(wins[0]);
 		JCuda.cudaFree(d_rand);
 		JCuda.cudaFree(d_randNum);
 		JCuda.cudaFree(d_board);
 		JCuda.cudaFree(d_boardWidth);
 		JCuda.cudaFree(d_color);
 		JCuda.cudaFree(d_wins);
-
-		int formerPlayouts = this.playouts;
-		this.playouts += threads*blocks;
-		winrate = (formerPlayouts*winrate + wins[0])/(playouts * 1.0);
-		lastWin = wins[0]/(threads*blocks);
+		winrate = (formerPlayouts * winrate + wins[0]) / (playouts * 1.0);
+		lastWin = wins[0] / (threads * blocks);
 		return wins[0];
 	}
 
@@ -157,8 +177,8 @@ public class CudaNode extends SearchNode {
 			throw new IOException("Input file not found: " + cuFileName);
 		}
 		String modelString = "-m" + System.getProperty("sun.arch.data.model");
-		String command = "nvcc -arch=sm_20 -v " + modelString + " -ptx " + cuFile.getPath()
-				+ " -o " + ptxFileName;
+		String command = "nvcc -arch=sm_20 -v " + modelString + " -ptx "
+				+ cuFile.getPath() + " -o " + ptxFileName;
 
 		System.out.println("Executing\n" + command);
 		Process process = Runtime.getRuntime().exec(command);
@@ -216,7 +236,8 @@ public class CudaNode extends SearchNode {
 		int bestIndex = -1;
 		double wins;
 		double UCTScore;
-		if (this.playouts <= 1) {
+		int blocksxthreads = blocks * threads;
+		if (this.playouts <= blocksxthreads) {
 			createChildrenNodes(board);
 		}
 		if (children.size() == 0) {
@@ -257,7 +278,6 @@ public class CudaNode extends SearchNode {
 			this.exhausted = true;
 			return -2;
 		}
-		int blocksxthreads = blocks * threads;
 		if (children.get(bestIndex).getPlayouts() == 0) {
 			CudaNode node = (CudaNode) children.get(bestIndex);
 			wins = node.playout(board, blocks, threads);

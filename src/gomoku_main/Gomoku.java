@@ -120,9 +120,9 @@ public class Gomoku {
 	public static void main(String args[]) {
 		double seconds = 5;
 
-		Player black = new Player(seconds, true, true, 1);
+		Player black = new Player(seconds, true, true, 2);
 		black.setCuda(14, 512);
-		Player white = new Player(seconds, true, true, 1);
+		Player white = new Player(seconds, true, false, 2);
 		// runExperiment(seconds);
 		runGame(black, white);
 	}

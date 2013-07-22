@@ -72,6 +72,7 @@ public class Player {
 	public void setCuda(int blocks, int threads) {
 		this.blocks = blocks;
 		this.threads = threads;
+		CudaNode.prepareGPU();
 	}
 
 	public boolean setTimePerMove(double time) {
