@@ -86,7 +86,7 @@ public class SearchNode {
 			}
 			return winner;
 		}
-		while (winner != Board.VACANT) {
+		while (winner == Board.VACANT) {
 			randMove = (int) (Math.random() * tempBoard.getBoardArea());
 			tempBoard.play(randMove);
 			winner = tempBoard.getWinner();

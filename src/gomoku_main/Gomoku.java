@@ -119,7 +119,6 @@ public class Gomoku {
 
 	public static void main(String args[]) {
 		double seconds = 5;
-
 		Player black = new Player(seconds, false, true, 2);
 		black.setCuda(14, 512);
 		Player white = new Player(seconds, false, true, 2);
