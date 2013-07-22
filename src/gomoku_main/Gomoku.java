@@ -19,8 +19,8 @@ public class Gomoku {
 		boolean autoGame = false;
 		int win;
 		List<Double> turnTimes = new LinkedList<Double>();
-		List<Integer> blackTurnPlayouts = new LinkedList<Integer>();
-		List<Integer> whiteTurnPlayouts = new LinkedList<Integer>();
+		List<Long> blackTurnPlayouts = new LinkedList<Long>();
+		List<Long> whiteTurnPlayouts = new LinkedList<Long>();
 		String command;
 		StringTokenizer token;
 		Scanner in = new Scanner(System.in);
@@ -49,7 +49,7 @@ public class Gomoku {
 				}
 			} else if (command.contains("genmove")) {
 				int playerMove;
-				int turnPlayout = 0;
+				long turnPlayout = 0;
 				long startTime = System.nanoTime();
 				if (board.getColorToPlay() == Board.BLACK) {
 					playerMove = black.getBestMove(board,
@@ -102,18 +102,18 @@ public class Gomoku {
 		}
 		double blackPlayoutSum = 0;
 		double whitePlayoutSum = 0;
-		for (Integer playouts : blackTurnPlayouts) {
+		for (Long playouts : blackTurnPlayouts) {
 			blackPlayoutSum += playouts;
 		}
-		for (Integer playouts : whiteTurnPlayouts) {
+		for (Long playouts : whiteTurnPlayouts) {
 			whitePlayoutSum += playouts;
 		}
 		System.out.println("Average time taken: "
 				+ (int) (timeSum / turnTimes.size()) + "ms");
 		System.out.println("Average black playouts per turn: "
-				+ (int) (blackPlayoutSum / blackTurnPlayouts.size()));
+				+ (long) (blackPlayoutSum / blackTurnPlayouts.size()));
 		System.out.println("Average white playouts per turn: "
-				+ (int) (whitePlayoutSum / whiteTurnPlayouts.size()));
+				+ (long) (whitePlayoutSum / whiteTurnPlayouts.size()));
 		return win;
 	}
 

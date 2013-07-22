@@ -24,7 +24,7 @@ public class CudaNode extends SearchNode {
 		// Create the PTX file by calling the NVCC
 		String ptxFileName = "";
 		try {
-			ptxFileName = preparePtxFile("/home/users/cschumann/cuda-workspace/Gomoku/src/playout.cu");
+			ptxFileName = preparePtxFile("/home/users/bcieslak/cuda-workspace/Gomoku/src/playout.cu");
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(1);
@@ -84,9 +84,18 @@ public class CudaNode extends SearchNode {
 			}
 			return blocksxthreads - winrate * blocksxthreads;
 		}
-		int[] rand = new int[blocksxthreads];
-		for (int i = 0; i < blocksxthreads; i++) {
-			rand[i] = i % board.getBoardArea();
+		//Generate all legal moves
+		List<Integer> legalMoves = new ArrayList<Integer>();
+		for(int i = 0; i < tempBoard.getBoardArea(); i++) {
+			if(tempBoard.isLegalMove(i)) {
+				legalMoves.add(i);
+			}
+		}
+		//shuffle them
+		int size = legalMoves.size();
+		int[] rand = new int[size];
+		for (int i = 0; i < size; i++) {
+			rand[i] = legalMoves.remove((int) (Math.random() * legalMoves.size()));
 		}
 
 		// Allocate the device input data, and copy the
@@ -133,9 +142,9 @@ public class CudaNode extends SearchNode {
 				kernelParameters, null);
 		cuCtxSynchronize();
 
+		
 		cuMemcpyDtoH(Pointer.to(wins), d_wins, Sizeof.FLOAT);
 
-		// System.out.println(wins[0]);
 		JCuda.cudaFree(d_rand);
 		JCuda.cudaFree(d_randNum);
 		JCuda.cudaFree(d_board);

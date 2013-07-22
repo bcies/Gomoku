@@ -1,11 +1,8 @@
 extern "C" __global__ void playout(int *rands, int *numRands, int *board,
 		int *boardWidth, int *colorToPlay, float *wins) {
-
-	atomicAdd(wins, (float) 1.0);
-
 	//copy board to local
 
-	l_width = *boardWidth;
+	int l_width = *boardWidth;
 
 	//NOTE!!!!! hardcoded!!! change if you can.....
 	int tempBoard[9 * 9];
@@ -17,9 +14,13 @@ extern "C" __global__ void playout(int *rands, int *numRands, int *board,
 	int wincolor = -1;
 	int colorTP = *colorToPlay;
 
+	int count = 0;
+
 	while (true) {
+		count += 1;
+		wincolor = -3;
 		//actual playouts
-		int n = rands[threadIdx.x % *numRands];
+		int n = rands[(count + threadIdx.x) % *numRands];
 		if (tempBoard[n] == 0) {
 			tempBoard[n] = colorTP;
 
@@ -142,6 +143,7 @@ extern "C" __global__ void playout(int *rands, int *numRands, int *board,
 				wincolor = 0;
 				break;
 			}
+			boardFull = 1;
 			if (colorTP == 1) {
 				colorTP = 2;
 			} else {

@@ -8,7 +8,7 @@ public class Player {
 	private boolean useHeuristics;
 	private boolean UCB;
 	private int UCT;
-	private int turnPlayouts;
+	private long turnPlayouts;
 	private int blocks;
 	private int threads;
 
@@ -46,7 +46,7 @@ public class Player {
 			long finishTime = (long) (timePerMove * 1000000000) + currentTime;
 			while (currentTime < finishTime) {
 				cudaTree.expandTree(board, blocks, threads);
-				turnPlayouts++;
+				turnPlayouts += (blocks * threads);
 				currentTime = System.nanoTime();
 			}
 			tree = cudaTree;
@@ -65,7 +65,7 @@ public class Player {
 		return nodes.get(bestNodeIndex).getMove();
 	}
 
-	public int getPlayouts() {
+	public long getPlayouts() {
 		return turnPlayouts;
 	}
 	
