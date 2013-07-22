@@ -1,37 +1,157 @@
-extern "C"
-__global__ void playout(int *rands, int *numRands, int *board, int *boardWidth, int *colorToPlay, float *wins)
-{
+extern "C" __global__ void playout(int *rands, int *numRands, int *board,
+		int *boardWidth, int *colorToPlay, float *wins) {
 
-	atomicAdd(wins, (float)1.0);
+	atomicAdd(wins, (float) 1.0);
 
-//	//copy board to local
-//
-//	//NOTE!!!!! hardcoded!!! change if you can.....
-//	int tempBoard[9*9];
-//	for (int j = 0; j < 9*9; j++){
-//		tempBoard[j] = board[j];
-//	}
-//
-//	int boardFull = 1;
-//	int wincolor = -1;
-//	int colorTP = *colorToPlay;
-//
-//
-//	//actual playouts
-//		int n = rands[threadIdx.x % *numRands];
-//		if (tempBoard[n] == 0){
-//			tempBoard[n] = colorTP;
-//			if (colorTP == 1){
-//				colorTP = 2;
-//			}
-//			else {
-//				colorTP = 1;
-//			}
-//		}
-//
-//		//check end of game.....
-//
+	//copy board to local
 
-//
-//			atomicAdd(wins, (float)1.0);
+	l_width = *boardWidth;
+
+	//NOTE!!!!! hardcoded!!! change if you can.....
+	int tempBoard[9 * 9];
+	for (int j = 0; j < l_width * l_width; j++) {
+		tempBoard[j] = board[j];
+	}
+
+	int boardFull = 1;
+	int wincolor = -1;
+	int colorTP = *colorToPlay;
+
+	while (true) {
+		//actual playouts
+		int n = rands[threadIdx.x % *numRands];
+		if (tempBoard[n] == 0) {
+			tempBoard[n] = colorTP;
+
+			//check end of game.....
+
+			int x = n % l_width;
+			int y = n / l_width;
+			int counter = 0;
+			int xNew;
+			int yNew;
+
+			//DownR to UpL
+
+			for (int j = -4; j < 4; j++) {
+				xNew = x - j;
+				yNew = y - j;
+				if ((xNew >= 0) && (xNew < l_width) && (yNew >= 0)
+						&& (yNew < l_width)) {
+					if (tempBoard[xNew + yNew * l_width] == colorTP) {
+						counter += 1;
+					} else {
+						counter = 0;
+					}
+					if (counter == 5) {
+						break;
+					}
+					if ((j > 0) && (counter == 0)) {
+						break;
+					}
+				}
+			}
+			if (counter == 5) {
+				wincolor = colorTP;
+				break;
+			}
+
+			counter = 0;
+
+			//UpR to DownL
+
+			for (int j = -4; j < 4; j++) {
+				xNew = x - j;
+				yNew = y + j;
+				if ((xNew >= 0) && (xNew < l_width) && (yNew >= 0)
+						&& (yNew < l_width)) {
+					if (tempBoard[xNew + yNew * l_width] == colorTP) {
+						counter += 1;
+					} else {
+						counter = 0;
+					}
+					if (counter == 5) {
+						break;
+					}
+					if ((j > 0) && (counter == 0)) {
+						break;
+					}
+				}
+			}
+			if (counter == 5) {
+				wincolor = colorTP;
+				break;
+			}
+
+			counter = 0;
+
+			//horizontal check
+
+			for (xNew = x - 4; xNew < x + 4; xNew++) {
+				if ((xNew >= 0) && (xNew < l_width)) {
+					if (tempBoard[xNew + y * l_width] == colorTP) {
+						counter += 1;
+					} else {
+						counter = 0;
+					}
+					if (counter == 5) {
+						break;
+					}
+					if ((xNew > x) && (counter == 0)) {
+						break;
+					}
+				}
+			}
+			if (counter == 5) {
+				wincolor = colorTP;
+				break;
+			}
+
+			counter = 0;
+
+			//vertical check
+
+			for (yNew = y - 4; yNew < y + 4; yNew++) {
+				if ((yNew >= 0) && (yNew < l_width)) {
+					if (tempBoard[x + yNew * l_width] == colorTP) {
+						counter += 1;
+					} else {
+						counter = 0;
+					}
+					if (counter == 5) {
+						break;
+					}
+					if ((yNew > y) && (counter == 0)) {
+						break;
+					}
+				}
+			}
+			if (counter == 5) {
+				wincolor = colorTP;
+				break;
+			}
+
+			//check if board is full
+			for (int i = 0; i < (9 * 9); i++) {
+				if (tempBoard[i] == 0) {
+					boardFull = 0;
+					break;
+				}
+			}
+			if (boardFull) {
+				wincolor = 0;
+				break;
+			}
+			if (colorTP == 1) {
+				colorTP = 2;
+			} else {
+				colorTP = 1;
+			}
+		}
+	}
+	if (wincolor == *colorToPlay) {
+		atomicAdd(wins, (float) 1.0);
+	} else if (wincolor == 0) {
+		atomicAdd(wins, (float) 0.5);
+	}
 }
