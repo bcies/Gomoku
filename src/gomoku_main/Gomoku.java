@@ -121,7 +121,7 @@ public class Gomoku {
 		double seconds = 5;
 
 		Player black = new Player(seconds, true, true, 1);
-		black.setCuda(7, 512);
+		black.setCuda(14, 512);
 		Player white = new Player(seconds, true, true, 1);
 		// runExperiment(seconds);
 		runGame(black, white);
