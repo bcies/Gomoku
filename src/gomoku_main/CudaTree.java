@@ -23,7 +23,6 @@ public class CudaTree extends SearchTree{
 	}
 	
 	public void expandTree(Board board, int blocks, int threads) {
-		System.out.println("expanding tree");
 		Board tempBoard = new Board();
 		tempBoard.copyBoard(board);
 		double bestScore = 0;
@@ -33,29 +32,14 @@ public class CudaTree extends SearchTree{
 			if (treeNodes.get(i).isExhausted()) {
 				UCBScore = -2;
 			} else if (treeNodes.get(i).getPlayouts() != 0) {
-				double winRate = treeNodes.get(i).getWinRate();
 				if (treeNodes.get(i).isFinalNode()) {
 					UCBScore = 0;
 				} else {
-					UCBScore = winRate
-							+ Math.sqrt(((Math.log(totalPlayouts)) / treeNodes
-									.get(i).getPlayouts())
-									* Math.min(
-											0.25,
-											treeNodes.get(i).getWinRate()
-													- treeNodes.get(i)
-															.getLastWin()
-													+ Math.sqrt((2 * Math
-															.log(totalPlayouts))
-															/ treeNodes
-																	.get(i)
-																	.getPlayouts())));
-
+					UCBScore = UCBSearchValue(totalPlayouts, tempBoard, i);
 				}
 			} else {
 				UCBScore = 0.45 + Math.random() * 0.1;
 			}
-			System.out.println("i value: " + i + ", UCBScore: " + UCBScore);
 			if (UCBScore > bestScore) {
 				bestScore = UCBScore;
 				bestIndex = i;

@@ -66,7 +66,6 @@ public class CudaNode extends SearchNode {
 	}
 
 	public double playout(Board board, int blocks, int threads) {
-		System.out.println("Doing playout");
 		int blocksxthreads = blocks * threads;
 		Board tempBoard = new Board();
 		tempBoard.copyBoard(board);
@@ -235,7 +234,7 @@ public class CudaNode extends SearchNode {
 		double bestScore = -1;
 		int bestIndex = -1;
 		double wins;
-		double UCTScore;
+		double UCBScore;
 		int blocksxthreads = blocks * threads;
 		if (this.playouts <= blocksxthreads) {
 			createChildrenNodes(board);
@@ -246,31 +245,18 @@ public class CudaNode extends SearchNode {
 		}
 		for (int i = 0; i < children.size(); i++) {
 			if (children.get(i).isExhausted()) {
-				UCTScore = -2;
+				UCBScore = -2;
 			} else if (children.get(i).getPlayouts() != 0) {
-				double winRate = children.get(i).getWinRate();
 				if (children.get(i).isFinalNode()) {
-					UCTScore = 0.0;
+					UCBScore = 0.0;
 				} else {
-					UCTScore = winRate
-							+ Math.sqrt((Math.log(playouts) / children.get(i)
-									.getPlayouts())
-									* Math.min(
-											0.25,
-											winRate
-													- children.get(i)
-															.getLastWin()
-													+ Math.sqrt((2 * Math
-															.log(playouts))
-															/ children
-																	.get(i)
-																	.getPlayouts())));
+					UCBScore = UCBSearchValue(playouts, board, i);
 				}
 			} else {
-				UCTScore = 0.5;
+				UCBScore = 0.45 + Math.random() * 0.1;
 			}
-			if (UCTScore > bestScore) {
-				bestScore = UCTScore;
+			if (UCBScore > bestScore) {
+				bestScore = UCBScore;
 				bestIndex = i;
 			}
 		}
