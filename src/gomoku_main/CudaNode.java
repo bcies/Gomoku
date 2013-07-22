@@ -259,7 +259,8 @@ public class CudaNode extends SearchNode {
 		}
 		int blocksxthreads = blocks * threads;
 		if (children.get(bestIndex).getPlayouts() == 0) {
-			wins = children.get(bestIndex).playout(board);
+			CudaNode node = (CudaNode) children.get(bestIndex);
+			wins = node.playout(board, blocks, threads);
 			int formerPlayouts = playouts;
 			playouts += blocksxthreads;
 			winrate = (formerPlayouts * winrate + wins) / (playouts);
