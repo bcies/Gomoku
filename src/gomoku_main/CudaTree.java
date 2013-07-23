@@ -59,6 +59,7 @@ public class CudaTree extends SearchTree {
 		Board tempBoard = new Board();
 		tempBoard.copyBoard(board);
 		double UCBScore;
+		int blocksxthreads = blocks * threads;
 		List<Double> sortedScore = new ArrayList<Double>();
 		List<Integer> sortedIndex = new ArrayList<Integer>();
 		for (int i = 0; i < treeNodes.size(); i++) {
@@ -74,49 +75,76 @@ public class CudaTree extends SearchTree {
 				UCBScore = 0.45 + Math.random() * 0.1;
 			}
 			boolean flag = true;
-			for (int j = 0; j < sortedScore.size(); j++){
-				if (UCBScore > sortedScore.get(j)){
+			for (int j = 0; j < sortedScore.size(); j++) {
+				if (UCBScore > sortedScore.get(j)) {
 					sortedScore.add(j, UCBScore);
 					sortedIndex.add(j, i);
 					flag = false;
 					break;
 				}
 			}
-			if (flag){
+			if (flag) {
 				sortedScore.add(UCBScore);
 				sortedIndex.add(i);
 			}
 		}
 
 		if (treeNodes.get(sortedIndex.get(0)).getPlayouts() == 0) {
-			
+
 			int[] bestIndex = new int[blocks];
 			int[] bestMove = new int[blocks];
 			int count = 0;
 			int i = 0;
-			while (count < blocks){
-				if (i < sortedScore.size()){
-					if (treeNodes.get(sortedIndex.get(i)).getPlayouts() == 0){
-						bestIndex[count] = sortedIndex.get(i);
-						bestMove[count] = treeNodes.get(sortedIndex.get(i)).getMove();
-						count++;
+			while (count < blocks) {
+				if (i < sortedScore.size()) {
+					if (treeNodes.get(sortedIndex.get(i)).getPlayouts() == 0) {
+						tempBoard.play(treeNodes.get(sortedIndex.get(i))
+								.getMove());
+						int winner = tempBoard.getWinner();
+						if (winner != Board.VACANT) {
+							treeNodes.get(sortedIndex.get(i))
+									.setFinalNode(true);
+							if (winner == treeNodes.get(sortedIndex.get(i))
+									.getColor()) {
+								treeNodes.get(sortedIndex.get(i)).setWinRate(
+										1.0);
+							}
+							if (winner == -1) {
+								// If the result is a tie.
+								treeNodes.get(sortedIndex.get(i)).setWinRate(
+										0.5);
+							}
+							treeNodes.get(sortedIndex.get(i)).setPlayouts(
+									blocksxthreads);
+						} else {
+							bestIndex[count] = sortedIndex.get(i);
+							bestMove[count] = treeNodes.get(sortedIndex.get(i))
+									.getMove();
+							count++;
+						}
+						tempBoard.setVacant(treeNodes.get(sortedIndex.get(i)).getMove());
 					}
-				}
-				else{
+				} else {
 					bestIndex[count] = -1;
 					bestMove[count] = -1;
 					count++;
 				}
 				i++;
 			}
-			double[] wins = PlayoutMethods.playoutMultiLeaf(board, blocks, threads, bestMove);
+			double[] wins = PlayoutMethods.playoutMultiLeaf(board, blocks,
+					threads, bestMove);
 			int formerPlayouts = totalPlayouts;
-			totalPlayouts += blocks * threads;
-			for (i = 0; i < bestIndex.length; i++){
-				if (bestIndex[i] != -1){
-					double value = (treeNodes.get(bestIndex[i]).getWinRate()*formerPlayouts + wins[i])/totalPlayouts;
+			totalPlayouts += blocksxthreads;
+			for (i = 0; i < bestIndex.length; i++) {
+				if (bestIndex[i] != -1) {
+					double value = (treeNodes.get(bestIndex[i]).getWinRate()
+							* formerPlayouts + wins[i])
+							/ totalPlayouts;
 					treeNodes.get(bestIndex[i]).setWinRate(value);
-					treeNodes.get(bestIndex[i]).setPlayouts(treeNodes.get(bestIndex[i]).getPlayouts() + threads);
+					treeNodes.get(bestIndex[i])
+							.setPlayouts(
+									treeNodes.get(bestIndex[i]).getPlayouts()
+											+ threads);
 				}
 			}
 		} else {
