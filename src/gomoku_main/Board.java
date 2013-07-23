@@ -187,6 +187,10 @@ public class Board {
 		}
 		return false;
 	}
+	
+	public void setVacant(int index){
+		board[index] = VACANT;
+	}
 
 	public int stringToIndex(String string) {
 
