@@ -89,7 +89,7 @@ public class PlayoutMethods {
 				Pointer.to(d_moves), Pointer.to(d_wins));
 
 		// Call the kernel function.
-		cuLaunchKernel(CudaNode.function, blocks, 1, 1, threads, 1, 1,
+		cuLaunchKernel(CudaNode.functionMultiLeaf, blocks, 1, 1, threads, 1, 1,
 				0, null, kernelParameters, null);
 		cuCtxSynchronize();
 

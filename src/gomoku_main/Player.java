@@ -5,10 +5,11 @@ import java.util.ArrayList;
 public class Player {
 
 	private double timePerMove;
+	private boolean multiLeaf;
 	private boolean useHeuristics;
 	private boolean UCB;
-	private int UCT;
 	private long turnPlayouts;
+	private int UCT;
 	private int blocks;
 	private int threads;
 
@@ -25,7 +26,7 @@ public class Player {
 	public int getBestMove(Board board, boolean showTree) {
 		turnPlayouts = 0;
 		SearchTree tree;
-		if (blocks == 0) {			
+		if (blocks == 0) {
 			tree = new SearchTree();
 			tree.createRootNodes(board, useHeuristics, UCT);
 			long currentTime = System.nanoTime();
@@ -45,8 +46,14 @@ public class Player {
 			long currentTime = System.nanoTime();
 			long finishTime = (long) (timePerMove * 1000000000) + currentTime;
 			while (currentTime < finishTime) {
-				cudaTree.expandTreeMultiLeaf(board, blocks, threads);
-				turnPlayouts += (blocks * threads);
+				if (multiLeaf) {
+					int playouts = cudaTree.expandTreeMultiLeaf(board, blocks, threads);
+					turnPlayouts += playouts;
+				}
+				else{
+					cudaTree.expandTree(board, blocks, threads);
+					turnPlayouts += (blocks * threads);
+				}
 				currentTime = System.nanoTime();
 			}
 			tree = cudaTree;
@@ -68,10 +75,11 @@ public class Player {
 	public long getPlayouts() {
 		return turnPlayouts;
 	}
-	
-	public void setCuda(int blocks, int threads) {
+
+	public void setCuda(int blocks, int threads, boolean multileaf) {
 		this.blocks = blocks;
 		this.threads = threads;
+		this.multiLeaf = multileaf;
 		CudaNode.prepareGPU();
 	}
 

@@ -25,20 +25,11 @@ public class CudaNode extends SearchNode {
 		// Create the PTX file by calling the NVCC
 		String ptxFileName = "";
 		try {
-			ptxFileName = preparePtxFile("/home/users/cschumann/cuda-workspace/Gomoku/src/playoutMultiLeaf.cu");
+			ptxFileName = preparePtxFile("/home/users/cschumann/cuda-workspace/Gomoku/src/playout.cu");
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(1);
 		}
-
-//		// Create the PTX file by calling the NVCC
-//		String ptxFileNameMultiLeaf = "";
-//		try {
-//			ptxFileNameMultiLeaf = preparePtxFile("/home/users/cschumann/cuda-workspace/Gomoku/src/playoutMultiLeaf.cu");
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//			System.exit(1);
-//		}
 
 		// Initialize the driver and create a context for the first device.
 		cuInit(0);
@@ -51,17 +42,13 @@ public class CudaNode extends SearchNode {
 		CUmodule module = new CUmodule();
 		cuModuleLoad(module, ptxFileName);
 
-//		// Load the ptx file.
-//		CUmodule moduleMultiLeaf = new CUmodule();
-//		cuModuleLoad(module, ptxFileNameMultiLeaf);
-
 		// Obtain a function pointer to the "playout" function.
 		function = new CUfunction();
-		cuModuleGetFunction(function, module, "playoutMultiLeaf");
+		cuModuleGetFunction(function, module, "playout");
 
-//		// Obtain a function pointer to the "playoutMultiLeaf" function.
-//		functionMultiLeaf = new CUfunction();
-//		cuModuleGetFunction(functionMultiLeaf, moduleMultiLeaf, "playoutMultiLeaf");
+		// Obtain a function pointer to the "playoutMultiLeaf" function.
+		functionMultiLeaf = new CUfunction();
+		cuModuleGetFunction(functionMultiLeaf, module, "playoutMultiLeaf");
 
 	}
 

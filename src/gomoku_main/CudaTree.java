@@ -55,7 +55,7 @@ public class CudaTree extends SearchTree {
 		}
 	}
 
-	public void expandTreeMultiLeaf(Board board, int blocks, int threads) {
+	public int expandTreeMultiLeaf(Board board, int blocks, int threads) {
 		Board tempBoard = new Board();
 		tempBoard.copyBoard(board);
 		double UCBScore;
@@ -114,15 +114,15 @@ public class CudaTree extends SearchTree {
 								treeNodes.get(sortedIndex.get(i)).setWinRate(
 										0.65);
 							}
-							treeNodes.get(sortedIndex.get(i)).setPlayouts(
-									blocksxthreads);
+							treeNodes.get(sortedIndex.get(i)).setPlayouts(1);
 						} else {
 							bestIndex[count] = sortedIndex.get(i);
 							bestMove[count] = treeNodes.get(sortedIndex.get(i))
 									.getMove();
 							count++;
 						}
-						tempBoard.setVacant(treeNodes.get(sortedIndex.get(i)).getMove());
+						tempBoard.setVacant(treeNodes.get(sortedIndex.get(i))
+								.getMove());
 					}
 				} else {
 					bestIndex[count] = -1;
@@ -134,7 +134,7 @@ public class CudaTree extends SearchTree {
 			float[] wins = PlayoutMethods.playoutMultiLeaf(board, blocks,
 					threads, bestMove);
 			int formerPlayouts = totalPlayouts;
-			totalPlayouts += blocksxthreads;
+			int sumThreads = 0;
 			for (i = 0; i < bestIndex.length; i++) {
 				if (bestIndex[i] != -1) {
 					double value = (treeNodes.get(bestIndex[i]).getWinRate()
@@ -145,11 +145,16 @@ public class CudaTree extends SearchTree {
 							.setPlayouts(
 									treeNodes.get(bestIndex[i]).getPlayouts()
 											+ threads);
+					sumThreads += threads;
+					
 				}
 			}
+			totalPlayouts += sumThreads;
+			return sumThreads;
 		} else {
 			CudaNode node = (CudaNode) treeNodes.get(sortedIndex.get(0));
-			node.traverseNodeMultiLeaf(tempBoard, blocks, threads);
+			double[] pair = node.traverseNodeMultiLeaf(tempBoard, blocks, threads);
+			return (int) pair[0];
 		}
 	}
 

@@ -120,7 +120,7 @@ public class Gomoku {
 	public static void main(String args[]) {
 		double seconds = 5;
 		Player black = new Player(seconds, true, true, 2);
-		black.setCuda(14, 512);
+		black.setCuda(14, 512, true);
 		Player white = new Player(seconds, true, true, 2);
 //		 runExperiment(seconds);
 		runGame(black, white);
@@ -128,7 +128,7 @@ public class Gomoku {
 
 	public static void runExperiment(double seconds) {
 		Player black = new Player(seconds, false, true, 3);
-		black.setCuda(14, 512);
+		black.setCuda(14, 512, true);
 		Player white = new Player(seconds, false, true, 3);
 		int blacksum = 0;
 		int firstties = 0;
@@ -143,7 +143,7 @@ public class Gomoku {
 		}
 		black = new Player(seconds, false, true, 3);
 		white = new Player(seconds, false, true, 3);
-		white.setCuda(14, 512);
+		white.setCuda(14, 512,true);
 		int whitesum = 0;
 		int secondties = 0;
 		for (int i = 0; i < 145; i++) {
