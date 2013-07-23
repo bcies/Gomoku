@@ -20,7 +20,7 @@ extern "C" __global__ void playout(int *rands, int *numRands, int *board,
 		count += 1;
 		wincolor = -3;
 		//actual playouts
-		int n = rands[(count + threadIdx.x) % *numRands];
+		int n = rands[(blockIdx.x * (*numRands / blockDim.x) + count + threadIdx.x) % *numRands];
 		if (tempBoard[n] == 0) {
 			tempBoard[n] = colorTP;
 

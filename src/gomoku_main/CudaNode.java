@@ -86,6 +86,7 @@ public class CudaNode extends SearchNode {
 		}
 		//Generate all legal moves
 		List<Integer> legalMoves = new ArrayList<Integer>();
+		List<Integer> newLegalMoves = new ArrayList<Integer>();
 		for(int i = 0; i < tempBoard.getBoardArea(); i++) {
 			if(tempBoard.isLegalMove(i)) {
 				legalMoves.add(i);
@@ -93,9 +94,15 @@ public class CudaNode extends SearchNode {
 		}
 		//shuffle them
 		int size = legalMoves.size();
-		int[] rand = new int[size];
-		for (int i = 0; i < size; i++) {
-			rand[i] = legalMoves.remove((int) (Math.random() * legalMoves.size()));
+		int[] rand = new int[blocks * size];
+		for (int j = 0; j < blocks; j++) {
+			for (int i = 0; i < size; i++) {
+				int randNumber = (int) (Math.random() * legalMoves.size());
+				newLegalMoves.add(legalMoves.get(randNumber));
+				rand[j * size + i] = legalMoves.remove(randNumber);
+			}
+			legalMoves.addAll(newLegalMoves);
+			newLegalMoves.clear();
 		}
 
 		// Allocate the device input data, and copy the
