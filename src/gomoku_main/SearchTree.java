@@ -99,24 +99,12 @@ public class SearchTree {
 		double UCBScore;
 		for (int i = 0; i < treeNodes.size(); i++) {
 			if (treeNodes.get(i).getPlayouts() != 0) {
-				double winRate = treeNodes.get(i).getWinRate();
-				if (treeNodes.get(i).isFinalNode()) {
+				if (treeNodes.get(i).isExhausted()) {
+					UCBScore = -2;
+				} else if (treeNodes.get(i).isFinalNode()) {
 					UCBScore = 0;
 				} else {
-					UCBScore = winRate
-							+ Math.sqrt(((Math.log(totalPlayouts)) / treeNodes
-									.get(i).getPlayouts())
-									* Math.min(
-											0.25,
-											treeNodes.get(i).getWinRate()
-													- treeNodes.get(i)
-															.getLastWin()
-													+ Math.sqrt((2 * Math
-															.log(totalPlayouts))
-															/ treeNodes
-																	.get(i)
-																	.getPlayouts())));
-
+					UCBScore = UCBSearchValue(totalPlayouts, tempBoard, i);
 				}
 			} else {
 				UCBScore = 0.45 + Math.random() * 0.1;
@@ -146,6 +134,29 @@ public class SearchTree {
 			}
 		}
 		return -1;
+	}
+
+	protected double UCBSearchValue(int totalPlayouts,
+			Board board, int childIdx) {
+		// The variable names here are chosen for consistency with the tech
+		// report
+		double barX = treeNodes.get(childIdx).getWinRate();
+		double logParentRunCount = Math.log(totalPlayouts);
+		// In the paper, term1 is the mean of the SQUARES of the rewards; since
+		// all rewards are 0 or 1 here, this is equivalent to the mean of the
+		// rewards, i.e., the win rate.
+		double term1 = barX;
+		double term2 = -(barX * barX);
+		double term3 = Math.sqrt(2 * logParentRunCount / treeNodes.get(childIdx).getPlayouts());
+		double v = term1 + term2 + term3; // This equation is above Eq. 1
+		assert v >= 0 : "Negative variability in UCT for move "
+				+ treeNodes.get(childIdx).getMove() + ":\nNode: " + childIdx + "\nterm1: " + term1
+				+ "\nterm2: " + term2 + "\nterm3: " + term3
+				+ "\nPlayer's board:\n" + board;
+		double factor1 = logParentRunCount / treeNodes.get(childIdx).getPlayouts();
+		double factor2 = Math.min(0.25, v);
+		double uncertainty = 0.4 * Math.sqrt(factor1 * factor2);
+		return uncertainty + barX;
 	}
 
 	@Override

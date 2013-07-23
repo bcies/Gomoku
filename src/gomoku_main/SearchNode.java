@@ -86,11 +86,11 @@ public class SearchNode {
 			}
 			return winner;
 		}
-		while (!tempBoard.hasWinner()) {
+		while (winner == Board.VACANT) {
 			randMove = (int) (Math.random() * tempBoard.getBoardArea());
 			tempBoard.play(randMove);
+			winner = tempBoard.getWinner();
 		}
-		winner = tempBoard.getWinner();
 		if (winner == color) {
 			winrate = (formerPlayouts * winrate + 1.0) / (playouts * 1.0);
 			lastWin = 1.0;
@@ -122,7 +122,7 @@ public class SearchNode {
 		double bestScore = -1;
 		int bestIndex = -1;
 		int win;
-		double UCTScore;
+		double UCBScore;
 		if (this.playouts <= 1) {
 			createChildrenNodes(board);
 		}
@@ -132,31 +132,18 @@ public class SearchNode {
 		}
 		for (int i = 0; i < children.size(); i++) {
 			if (children.get(i).isExhausted()) {
-				UCTScore = -2;
+				UCBScore = -2;
 			} else if (children.get(i).getPlayouts() != 0) {
-				double winRate = children.get(i).getWinRate();
 				if (children.get(i).isFinalNode()) {
-					UCTScore = 0.0;
+					UCBScore = 0.0;
 				} else {
-					UCTScore = winRate
-							+ Math.sqrt((Math.log(playouts) / children.get(i)
-									.getPlayouts())
-									* Math.min(
-											0.25,
-											winRate
-													- children.get(i)
-															.getLastWin()
-													+ Math.sqrt((2 * Math
-															.log(playouts))
-															/ children
-																	.get(i)
-																	.getPlayouts())));
+					UCBScore = UCBSearchValue(playouts, board, i);
 				}
 			} else {
-				UCTScore = 0.5;
+				UCBScore = 0.45 + Math.random() * 0.1;
 			}
-			if (UCTScore > bestScore) {
-				bestScore = UCTScore;
+			if (UCBScore > bestScore) {
+				bestScore = UCBScore;
 				bestIndex = i;
 			}
 		}
@@ -296,6 +283,29 @@ public class SearchNode {
 	// wins += 1;
 	// }
 	// return winner;
+	
+	protected double UCBSearchValue(int totalPlayouts,
+			Board board, int childIdx) {
+		// The variable names here are chosen for consistency with the tech
+		// report
+		double barX = children.get(childIdx).getWinRate();
+		double logParentRunCount = Math.log(totalPlayouts);
+		// In the paper, term1 is the mean of the SQUARES of the rewards; since
+		// all rewards are 0 or 1 here, this is equivalent to the mean of the
+		// rewards, i.e., the win rate.
+		double term1 = barX;
+		double term2 = -(barX * barX);
+		double term3 = Math.sqrt(2 * logParentRunCount / children.get(childIdx).getPlayouts());
+		double v = term1 + term2 + term3; // This equation is above Eq. 1
+		assert v >= 0 : "Negative variability in UCT for move "
+				+ children.get(childIdx).getMove() + ":\nNode: " + childIdx + "\nterm1: " + term1
+				+ "\nterm2: " + term2 + "\nterm3: " + term3
+				+ "\nPlayer's board:\n" + board;
+		double factor1 = logParentRunCount / children.get(childIdx).getPlayouts();
+		double factor2 = Math.min(0.25, v);
+		double uncertainty = 0.4 * Math.sqrt(factor1 * factor2);
+		return uncertainty + barX;
+	}
 
 	public String toString() {
 		return toString(0);

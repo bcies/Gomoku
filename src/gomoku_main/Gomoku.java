@@ -121,7 +121,7 @@ public class Gomoku {
 		double seconds = 5;
 
 		Player black = new Player(seconds, true, true, 1);
-		Player white = new Player(seconds, true, true, 1);
+		Player white = new Player(seconds, true, false, 1);
 		// runExperiment(seconds);
 		runGame(black, white);
 	}
