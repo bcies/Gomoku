@@ -112,7 +112,7 @@ public class CudaTree extends SearchTree {
 							if (winner == -1) {
 								// If the result is a tie.
 								treeNodes.get(sortedIndex.get(i)).setWinRate(
-										0.5);
+										0.65);
 							}
 							treeNodes.get(sortedIndex.get(i)).setPlayouts(
 									blocksxthreads);

@@ -386,7 +386,7 @@ public class CudaNode extends SearchNode {
 							if (winner == -1) {
 								// If the result is a tie.
 								children.get(sortedIndex.get(i))
-										.setWinRate(0.5);
+										.setWinRate(0.65);
 							}
 							children.get(sortedIndex.get(i)).setPlayouts(
 									blocksxthreads);

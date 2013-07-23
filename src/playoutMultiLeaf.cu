@@ -168,6 +168,6 @@ __global__ void playoutMultiLeaf(int *rands, int *numRands, int *board,
 	if (wincolor == *colorToPlay) {
 		atomicAdd(&wins[blockIdx.x], (float) 1.0);
 	} else if (wincolor == 0) {
-		atomicAdd(&wins[blockIdx.x], (float) 0.5);
+		atomicAdd(&wins[blockIdx.x], (float) 0.65);
 	}
 }
