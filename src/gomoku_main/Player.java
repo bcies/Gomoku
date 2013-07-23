@@ -45,7 +45,7 @@ public class Player {
 			long currentTime = System.nanoTime();
 			long finishTime = (long) (timePerMove * 1000000000) + currentTime;
 			while (currentTime < finishTime) {
-				cudaTree.expandTree(board, blocks, threads);
+				cudaTree.expandTreeMultiLeaf(board, blocks, threads);
 				turnPlayouts += (blocks * threads);
 				currentTime = System.nanoTime();
 			}

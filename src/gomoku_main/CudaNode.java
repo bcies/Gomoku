@@ -12,8 +12,9 @@ import jcuda.driver.*;
 import jcuda.runtime.JCuda;
 
 public class CudaNode extends SearchNode {
-	
+
 	protected static CUfunction function;
+	protected static CUfunction functionMultiLeaf;
 
 	public static void prepareGPU() {
 		// Note the following CUDA code came from
@@ -24,11 +25,20 @@ public class CudaNode extends SearchNode {
 		// Create the PTX file by calling the NVCC
 		String ptxFileName = "";
 		try {
-			ptxFileName = preparePtxFile("/home/users/bcieslak/cuda-workspace/Gomoku/src/playout.cu");
+			ptxFileName = preparePtxFile("/home/users/cschumann/cuda-workspace/Gomoku/src/playoutMultiLeaf.cu");
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(1);
 		}
+
+//		// Create the PTX file by calling the NVCC
+//		String ptxFileNameMultiLeaf = "";
+//		try {
+//			ptxFileNameMultiLeaf = preparePtxFile("/home/users/cschumann/cuda-workspace/Gomoku/src/playoutMultiLeaf.cu");
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//			System.exit(1);
+//		}
 
 		// Initialize the driver and create a context for the first device.
 		cuInit(0);
@@ -41,9 +51,17 @@ public class CudaNode extends SearchNode {
 		CUmodule module = new CUmodule();
 		cuModuleLoad(module, ptxFileName);
 
-		// Obtain a function pointer to the "add" function.
+//		// Load the ptx file.
+//		CUmodule moduleMultiLeaf = new CUmodule();
+//		cuModuleLoad(module, ptxFileNameMultiLeaf);
+
+		// Obtain a function pointer to the "playout" function.
 		function = new CUfunction();
-		cuModuleGetFunction(function, module, "playout");
+		cuModuleGetFunction(function, module, "playoutMultiLeaf");
+
+//		// Obtain a function pointer to the "playoutMultiLeaf" function.
+//		functionMultiLeaf = new CUfunction();
+//		cuModuleGetFunction(functionMultiLeaf, moduleMultiLeaf, "playoutMultiLeaf");
 
 	}
 
@@ -84,15 +102,15 @@ public class CudaNode extends SearchNode {
 			}
 			return blocksxthreads - winrate * blocksxthreads;
 		}
-		//Generate all legal moves
+		// Generate all legal moves
 		List<Integer> legalMoves = new ArrayList<Integer>();
 		List<Integer> newLegalMoves = new ArrayList<Integer>();
-		for(int i = 0; i < tempBoard.getBoardArea(); i++) {
-			if(tempBoard.isLegalMove(i)) {
+		for (int i = 0; i < tempBoard.getBoardArea(); i++) {
+			if (tempBoard.isLegalMove(i)) {
 				legalMoves.add(i);
 			}
 		}
-		//shuffle them
+		// shuffle them
 		int size = legalMoves.size();
 		int[] rand = new int[blocks * size];
 		for (int j = 0; j < blocks; j++) {
@@ -118,8 +136,8 @@ public class CudaNode extends SearchNode {
 
 		CUdeviceptr d_board = new CUdeviceptr();
 		cuMemAlloc(d_board, Sizeof.INT * board.getBoardArea());
-		cuMemcpyHtoD(d_board, Pointer.to(tempBoard.getBoard()),
-				Sizeof.INT * board.getBoardArea());
+		cuMemcpyHtoD(d_board, Pointer.to(tempBoard.getBoard()), Sizeof.INT
+				* board.getBoardArea());
 
 		int boardWidth[] = { board.getBoardWidth() };
 		CUdeviceptr d_boardWidth = new CUdeviceptr();
@@ -149,7 +167,6 @@ public class CudaNode extends SearchNode {
 				kernelParameters, null);
 		cuCtxSynchronize();
 
-		
 		cuMemcpyDtoH(Pointer.to(wins), d_wins, Sizeof.FLOAT);
 
 		JCuda.cudaFree(d_rand);
@@ -302,7 +319,7 @@ public class CudaNode extends SearchNode {
 		}
 
 	}
-	
+
 	public double traverseNodeMultiLeaf(Board board, int blocks, int threads) {
 		board.play(this.move);
 		double UCBScore;
@@ -329,15 +346,15 @@ public class CudaNode extends SearchNode {
 				UCBScore = 0.45 + Math.random() * 0.1;
 			}
 			boolean flag = true;
-			for (int j = 0; j < sortedScore.size(); j++){
-				if (UCBScore > sortedScore.get(j)){
+			for (int j = 0; j < sortedScore.size(); j++) {
+				if (UCBScore > sortedScore.get(j)) {
 					sortedScore.add(j, UCBScore);
 					sortedIndex.add(j, i);
 					flag = false;
 					break;
 				}
 			}
-			if (flag){
+			if (flag) {
 				sortedScore.add(UCBScore);
 				sortedIndex.add(i);
 			}
@@ -347,39 +364,64 @@ public class CudaNode extends SearchNode {
 			return -2;
 		}
 		if (children.get(sortedIndex.get(0)).getPlayouts() == 0) {
-			
+
 			int[] bestIndex = new int[blocks];
 			int[] bestMove = new int[blocks];
 			int count = 0;
 			int i = 0;
-			while (count < blocks){
-				if (i < sortedScore.size()){
-					if (children.get(sortedIndex.get(i)).getPlayouts() == 0){
-						bestIndex[count] = sortedIndex.get(i);
-						bestMove[count] = children.get(sortedIndex.get(i)).getMove();
-						count++;
+			while (count < blocks) {
+				if (i < sortedScore.size()) {
+					if (children.get(sortedIndex.get(i)).getPlayouts() == 0) {
+						board.play(children.get(sortedIndex.get(i)).getMove());
+						int winner = board.getWinner();
+						if (winner != Board.VACANT) {
+							children.get(sortedIndex.get(i)).setFinalNode(true);
+							if (winner == children.get(sortedIndex.get(i))
+									.getColor()) {
+								children.get(sortedIndex.get(i))
+										.setWinRate(1.0);
+							}
+							if (winner == -1) {
+								// If the result is a tie.
+								children.get(sortedIndex.get(i))
+										.setWinRate(0.5);
+							}
+							children.get(sortedIndex.get(i)).setPlayouts(
+									blocksxthreads);
+						} else {
+							bestIndex[count] = sortedIndex.get(i);
+							bestMove[count] = children.get(sortedIndex.get(i))
+									.getMove();
+							count++;
+						}
+						board.setVacant(children.get(sortedIndex.get(i))
+								.getMove());
 					}
-				}
-				else{
+				} else {
 					bestIndex[count] = -1;
 					bestMove[count] = -1;
 					count++;
 				}
 				i++;
 			}
-			double[] wins = PlayoutMethods.playoutMultiLeaf(board, blocks, threads, bestMove);
+			float[] wins = PlayoutMethods.playoutMultiLeaf(board, blocks,
+					threads, bestMove);
 			int formerPlayouts = playouts;
 			playouts += blocksxthreads;
-			for (i = 0; i < bestIndex.length; i++){
-				if (bestIndex[i] != -1){
-					double value = (children.get(bestIndex[i]).getWinRate()*formerPlayouts + wins[i])/playouts;
+			for (i = 0; i < bestIndex.length; i++) {
+				if (bestIndex[i] != -1) {
+					double value = (children.get(bestIndex[i]).getWinRate()
+							* formerPlayouts + wins[i])
+							/ playouts;
 					children.get(bestIndex[i]).setWinRate(value);
-					children.get(bestIndex[i]).setPlayouts(children.get(bestIndex[i]).getPlayouts() + threads);
+					children.get(bestIndex[i]).setPlayouts(
+							children.get(bestIndex[i]).getPlayouts() + threads);
 				}
 			}
 			double sumWins = 0;
-			for (i = 0; i < wins.length; i++){
-				if (wins[i] != -1) sumWins += wins[i];
+			for (i = 0; i < wins.length; i++) {
+				if (wins[i] != -1)
+					sumWins += wins[i];
 			}
 			return blocksxthreads - sumWins;
 		} else {

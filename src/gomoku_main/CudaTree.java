@@ -131,7 +131,7 @@ public class CudaTree extends SearchTree {
 				}
 				i++;
 			}
-			double[] wins = PlayoutMethods.playoutMultiLeaf(board, blocks,
+			float[] wins = PlayoutMethods.playoutMultiLeaf(board, blocks,
 					threads, bestMove);
 			int formerPlayouts = totalPlayouts;
 			totalPlayouts += blocksxthreads;
@@ -149,7 +149,7 @@ public class CudaTree extends SearchTree {
 			}
 		} else {
 			CudaNode node = (CudaNode) treeNodes.get(sortedIndex.get(0));
-			node.traverseNode(tempBoard, blocks, threads);
+			node.traverseNodeMultiLeaf(tempBoard, blocks, threads);
 		}
 	}
 

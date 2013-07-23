@@ -1,6 +1,6 @@
 extern "C"
-__global__ void playout(int *rands, int *numRands, int *board,
-		int *boardWidth, int *colorToPlay, float *wins) {
+__global__ void playoutMultiLeaf(int *rands, int *numRands, int *board,
+		int *boardWidth, int *colorToPlay, int *move, float *wins) {
 	//copy board to local
 
 	int l_width = *boardWidth;
@@ -14,6 +14,14 @@ __global__ void playout(int *rands, int *numRands, int *board,
 	int boardFull = 1;
 	int wincolor = -1;
 	int colorTP = *colorToPlay;
+
+	tempBoard[move[blockIdx.x]] = colorTP;
+
+	if (colorTP == 1){
+		colorTP = 2;
+	} else {
+		colorTP = 1;
+	}
 
 	int count = 0;
 
@@ -153,10 +161,8 @@ __global__ void playout(int *rands, int *numRands, int *board,
 		}
 	}
 	if (wincolor == *colorToPlay) {
-		atomicAdd(wins, (float) 1.0);
+		atomicAdd(&wins[blockIdx.x], (float) 1.0);
 	} else if (wincolor == 0) {
-		atomicAdd(wins, (float) 0.5);
+		atomicAdd(&wins[blockIdx.x], (float) 0.5);
 	}
 }
-
-
