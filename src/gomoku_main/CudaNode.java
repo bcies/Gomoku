@@ -302,4 +302,98 @@ public class CudaNode extends SearchNode {
 		}
 
 	}
+	
+	public double traverseNodeMultiLeaf(Board board, int blocks, int threads) {
+		board.play(this.move);
+		double UCBScore;
+		List<Double> sortedScore = new ArrayList<Double>();
+		List<Integer> sortedIndex = new ArrayList<Integer>();
+		int blocksxthreads = blocks * threads;
+		if (this.playouts <= blocksxthreads) {
+			createChildrenNodes(board);
+		}
+		if (children.size() == 0) {
+			this.exhausted = true;
+			return -2;
+		}
+		for (int i = 0; i < children.size(); i++) {
+			if (children.get(i).isExhausted()) {
+				UCBScore = -2;
+			} else if (children.get(i).getPlayouts() != 0) {
+				if (children.get(i).isFinalNode()) {
+					UCBScore = 0.0;
+				} else {
+					UCBScore = UCBSearchValue(playouts, board, i);
+				}
+			} else {
+				UCBScore = 0.45 + Math.random() * 0.1;
+			}
+			boolean flag = true;
+			for (int j = 0; j < sortedScore.size(); j++){
+				if (UCBScore > sortedScore.get(j)){
+					sortedScore.add(j, UCBScore);
+					sortedIndex.add(j, i);
+					flag = false;
+					break;
+				}
+			}
+			if (flag){
+				sortedScore.add(UCBScore);
+				sortedIndex.add(i);
+			}
+		}
+		if (sortedScore.get(0) <= -1) {
+			this.exhausted = true;
+			return -2;
+		}
+		if (children.get(sortedIndex.get(0)).getPlayouts() == 0) {
+			
+			int[] bestIndex = new int[blocks];
+			int[] bestMove = new int[blocks];
+			int count = 0;
+			int i = 0;
+			while (count < blocks){
+				if (i < sortedScore.size()){
+					if (children.get(sortedIndex.get(i)).getPlayouts() == 0){
+						bestIndex[count] = sortedIndex.get(i);
+						bestMove[count] = children.get(sortedIndex.get(i)).getMove();
+						count++;
+					}
+				}
+				else{
+					bestIndex[count] = -1;
+					bestMove[count] = -1;
+					count++;
+				}
+				i++;
+			}
+			double[] wins = PlayoutMethods.playoutMultiLeaf(board, blocks, threads, bestMove);
+			int formerPlayouts = playouts;
+			playouts += blocksxthreads;
+			for (i = 0; i < bestIndex.length; i++){
+				if (bestIndex[i] != -1){
+					double value = (children.get(bestIndex[i]).getWinRate()*formerPlayouts + wins[i])/playouts;
+					children.get(bestIndex[i]).setWinRate(value);
+					children.get(bestIndex[i]).setPlayouts(children.get(bestIndex[i]).getPlayouts() + threads);
+				}
+			}
+			double sumWins = 0;
+			for (i = 0; i < wins.length; i++){
+				if (wins[i] != -1) sumWins += wins[i];
+			}
+			return blocksxthreads - sumWins;
+		} else {
+			CudaNode node = (CudaNode) children.get(sortedIndex.get(0));
+			double win = node.traverseNodeMultiLeaf(board, blocks, threads);
+			if (win == -2) {
+				win = this.traverseNodeMultiLeaf(board, blocks, threads);
+			}
+			int formerPlayouts = playouts;
+			playouts += blocksxthreads;
+			winrate = (formerPlayouts * winrate + win) / (playouts);
+			lastWin = win / blocksxthreads;
+			return blocksxthreads - win;
+		}
+
+	}
 }

@@ -1,16 +1,15 @@
 package gomoku_main;
 
 import java.util.ArrayList;
+import java.util.List;
 
-public class CudaTree extends SearchTree{
-	
+public class CudaTree extends SearchTree {
 
-	
 	public CudaTree() {
 		treeNodes = new ArrayList<SearchNode>();
 		totalPlayouts = 0;
 	}
-	
+
 	public void createRootNodes(Board board, boolean useHeuristics) {
 		for (int i = 0; i < board.getBoardArea(); i++) {
 			if (board.isLegalMove(i)) {
@@ -21,7 +20,7 @@ public class CudaTree extends SearchTree{
 			applyHeuristic(board);
 		}
 	}
-	
+
 	public void expandTree(Board board, int blocks, int threads) {
 		Board tempBoard = new Board();
 		tempBoard.copyBoard(board);
@@ -45,13 +44,83 @@ public class CudaTree extends SearchTree{
 				bestIndex = i;
 			}
 		}
-		
+
 		if (treeNodes.get(bestIndex).getPlayouts() == 0) {
 			CudaNode node = (CudaNode) treeNodes.get(bestIndex);
 			node.playout(tempBoard, blocks, threads);
 			totalPlayouts += blocks * threads;
 		} else {
 			CudaNode node = (CudaNode) treeNodes.get(bestIndex);
+			node.traverseNode(tempBoard, blocks, threads);
+		}
+	}
+
+	public void expandTreeMultiLeaf(Board board, int blocks, int threads) {
+		Board tempBoard = new Board();
+		tempBoard.copyBoard(board);
+		double UCBScore;
+		List<Double> sortedScore = new ArrayList<Double>();
+		List<Integer> sortedIndex = new ArrayList<Integer>();
+		for (int i = 0; i < treeNodes.size(); i++) {
+			if (treeNodes.get(i).isExhausted()) {
+				UCBScore = -2;
+			} else if (treeNodes.get(i).getPlayouts() != 0) {
+				if (treeNodes.get(i).isFinalNode()) {
+					UCBScore = 0;
+				} else {
+					UCBScore = UCBSearchValue(totalPlayouts, tempBoard, i);
+				}
+			} else {
+				UCBScore = 0.45 + Math.random() * 0.1;
+			}
+			boolean flag = true;
+			for (int j = 0; j < sortedScore.size(); j++){
+				if (UCBScore > sortedScore.get(j)){
+					sortedScore.add(j, UCBScore);
+					sortedIndex.add(j, i);
+					flag = false;
+					break;
+				}
+			}
+			if (flag){
+				sortedScore.add(UCBScore);
+				sortedIndex.add(i);
+			}
+		}
+
+		if (treeNodes.get(sortedIndex.get(0)).getPlayouts() == 0) {
+			
+			int[] bestIndex = new int[blocks];
+			int[] bestMove = new int[blocks];
+			int count = 0;
+			int i = 0;
+			while (count < blocks){
+				if (i < sortedScore.size()){
+					if (treeNodes.get(sortedIndex.get(i)).getPlayouts() == 0){
+						bestIndex[count] = sortedIndex.get(i);
+						bestMove[count] = treeNodes.get(sortedIndex.get(i)).getMove();
+						count++;
+					}
+				}
+				else{
+					bestIndex[count] = -1;
+					bestMove[count] = -1;
+					count++;
+				}
+				i++;
+			}
+			double[] wins = PlayoutMethods.playoutMultiLeaf(board, blocks, threads, bestMove);
+			int formerPlayouts = totalPlayouts;
+			totalPlayouts += blocks * threads;
+			for (i = 0; i < bestIndex.length; i++){
+				if (bestIndex[i] != -1){
+					double value = (treeNodes.get(bestIndex[i]).getWinRate()*formerPlayouts + wins[i])/totalPlayouts;
+					treeNodes.get(bestIndex[i]).setWinRate(value);
+					treeNodes.get(bestIndex[i]).setPlayouts(treeNodes.get(bestIndex[i]).getPlayouts() + threads);
+				}
+			}
+		} else {
+			CudaNode node = (CudaNode) treeNodes.get(sortedIndex.get(0));
 			node.traverseNode(tempBoard, blocks, threads);
 		}
 	}
