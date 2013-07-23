@@ -82,7 +82,7 @@ public class SearchNode {
 			}
 			if (winner == -1) {
 				// If the result is a tie.
-				winrate = 0.5;
+				winrate = 0.65;
 			}
 			return winner;
 		}
@@ -96,8 +96,8 @@ public class SearchNode {
 			lastWin = 1.0;
 		} else if (winner == -1) {
 			// If the result is a tie.
-			winrate = (formerPlayouts * winrate + 0.5) / (playouts * 1.0);
-			lastWin = 0.5;
+			winrate = (formerPlayouts * winrate + 0.65) / (playouts * 1.0);
+			lastWin = 0.65;
 		} else {
 			winrate = (formerPlayouts * winrate + 0.0) / (playouts * 1.0);
 			lastWin = 0.0;
