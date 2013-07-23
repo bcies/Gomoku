@@ -16,7 +16,7 @@ public class Gomoku {
 
 	public static int runGame(Player black, Player white) {
 		board = new Board();
-		boolean autoGame = false;
+		boolean autoGame = true;
 		int win;
 		List<Double> turnTimes = new LinkedList<Double>();
 		List<Long> blackTurnPlayouts = new LinkedList<Long>();
@@ -118,12 +118,12 @@ public class Gomoku {
 	}
 
 	public static void main(String args[]) {
-		double seconds = 5;
+		double seconds = 15;
 		Player black = new Player(seconds, true, true, 2);
 		black.setCuda(14, 512);
 		Player white = new Player(seconds, true, true, 2);
-//		 runExperiment(seconds);
-		runGame(black, white);
+		 runExperiment(seconds);
+//		runGame(black, white);
 	}
 
 	public static void runExperiment(double seconds) {
@@ -133,7 +133,7 @@ public class Gomoku {
 		int blacksum = 0;
 		int firstties = 0;
 		int win;
-		for (int i = 0; i < 145; i++) {
+		for (int i = 0; i < 20; i++) {
 			win = runGame(black, white);
 			if (win == Board.BLACK) {
 				blacksum += 1;
@@ -146,7 +146,7 @@ public class Gomoku {
 		white.setCuda(14, 512);
 		int whitesum = 0;
 		int secondties = 0;
-		for (int i = 0; i < 145; i++) {
+		for (int i = 0; i < 20; i++) {
 			win = runGame(black, white);
 			if (win == Board.WHITE) {
 				whitesum += 1;
@@ -155,10 +155,10 @@ public class Gomoku {
 			}
 		}
 		System.out.println("\n");
-		System.out.println("First  145 games: black uses CUDA");
+		System.out.println("First  20 games: black uses CUDA");
 		System.out.println("Black won " + blacksum + " games");
 		System.out.println("Ties: " + firstties);
-		System.out.println("\nSecond 145 games: white uses CUDA");
+		System.out.println("\nSecond 20 games: white uses CUDA");
 		System.out.println("White won " + whitesum + " games");
 		System.out.println("Ties: " + secondties);
 
