@@ -15,7 +15,12 @@ __global__ void playoutMultiLeaf(int *rands, int *numRands, int *board,
 	int wincolor = -1;
 	int colorTP = *colorToPlay;
 
-	tempBoard[move[blockIdx.x]] = colorTP;
+	int l_move = move[blockIdx.x];
+	if (l_move == -1){
+		return;
+	}
+
+	tempBoard[l_move] = colorTP;
 
 	if (colorTP == 1){
 		colorTP = 2;

@@ -93,7 +93,7 @@ public class PlayoutMethods {
 				0, null, kernelParameters, null);
 		cuCtxSynchronize();
 
-		cuMemcpyDtoH(Pointer.to(wins), d_wins, Sizeof.FLOAT);
+		cuMemcpyDtoH(Pointer.to(wins), d_wins, Sizeof.FLOAT*wins.length);
 
 		JCuda.cudaFree(d_rand);
 		JCuda.cudaFree(d_randNum);

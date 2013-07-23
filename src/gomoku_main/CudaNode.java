@@ -320,7 +320,7 @@ public class CudaNode extends SearchNode {
 
 	}
 
-	public double traverseNodeMultiLeaf(Board board, int blocks, int threads) {
+	public double[] traverseNodeMultiLeaf(Board board, int blocks, int threads) {
 		board.play(this.move);
 		double UCBScore;
 		List<Double> sortedScore = new ArrayList<Double>();
@@ -331,7 +331,8 @@ public class CudaNode extends SearchNode {
 		}
 		if (children.size() == 0) {
 			this.exhausted = true;
-			return -2;
+			double[] pair = {-2,-2};
+			return pair;
 		}
 		for (int i = 0; i < children.size(); i++) {
 			if (children.get(i).isExhausted()) {
@@ -361,7 +362,8 @@ public class CudaNode extends SearchNode {
 		}
 		if (sortedScore.get(0) <= -1) {
 			this.exhausted = true;
-			return -2;
+			double[] pair = {-2,-2};
+			return pair;
 		}
 		if (children.get(sortedIndex.get(0)).getPlayouts() == 0) {
 
@@ -407,7 +409,7 @@ public class CudaNode extends SearchNode {
 			float[] wins = PlayoutMethods.playoutMultiLeaf(board, blocks,
 					threads, bestMove);
 			int formerPlayouts = playouts;
-			playouts += blocksxthreads;
+			
 			for (i = 0; i < bestIndex.length; i++) {
 				if (bestIndex[i] != -1) {
 					double value = (children.get(bestIndex[i]).getWinRate()
@@ -416,25 +418,32 @@ public class CudaNode extends SearchNode {
 					children.get(bestIndex[i]).setWinRate(value);
 					children.get(bestIndex[i]).setPlayouts(
 							children.get(bestIndex[i]).getPlayouts() + threads);
+					playouts += threads;
 				}
 			}
 			double sumWins = 0;
+			int sumBlocks = 0;
 			for (i = 0; i < wins.length; i++) {
-				if (wins[i] != -1)
+				if (wins[i] != -1){
 					sumWins += wins[i];
+					sumBlocks += threads;
+				}
 			}
-			return blocksxthreads - sumWins;
+			winrate = (winrate*formerPlayouts + sumWins)/playouts;
+			double[] pair = {sumBlocks, sumBlocks - sumWins};
+			return pair;
 		} else {
 			CudaNode node = (CudaNode) children.get(sortedIndex.get(0));
-			double win = node.traverseNodeMultiLeaf(board, blocks, threads);
-			if (win == -2) {
-				win = this.traverseNodeMultiLeaf(board, blocks, threads);
+			double[] winPair = node.traverseNodeMultiLeaf(board, blocks, threads);
+			if (winPair[0] == -2) {
+				winPair = this.traverseNodeMultiLeaf(board, blocks, threads);
 			}
 			int formerPlayouts = playouts;
-			playouts += blocksxthreads;
-			winrate = (formerPlayouts * winrate + win) / (playouts);
-			lastWin = win / blocksxthreads;
-			return blocksxthreads - win;
+			playouts += winPair[0];
+			winrate = (formerPlayouts * winrate + winPair[1]) / (playouts);
+			lastWin = winPair[1] / winPair[0];
+			double[] pair = {winPair[0], winPair[0] - winPair[1]};
+			return pair;
 		}
 
 	}
