@@ -155,7 +155,7 @@ __global__ void playout(int *rands, int *numRands, int *board,
 	if (wincolor == *colorToPlay) {
 		atomicAdd(wins, (float) 1.0);
 	} else if (wincolor == 0) {
-		atomicAdd(wins, (float) 0.5);
+		atomicAdd(wins, (float) 0.65);
 	}
 }
 extern "C"

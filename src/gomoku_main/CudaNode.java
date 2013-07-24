@@ -85,7 +85,7 @@ public class CudaNode extends SearchNode {
 			}
 			if (winner == -1) {
 				// If the result is a tie.
-				winrate = 0.5;
+				winrate = 0.65;
 			}
 			return blocksxthreads - winrate * blocksxthreads;
 		}

@@ -143,13 +143,19 @@ public class Gomoku {
 
 	public static void runExperiment() {
 		int totalGames;
+		int blocks;
+		int threads;
+		int player1UCTK;
+		int player2UCTK;
 		double timePerMove;
+		boolean player1CUDA;
+		boolean player2CUDA;
+		boolean player1Multi;
+		boolean player2Multi;
 		boolean player1Heuristics;
 		boolean player2Heuristics;
 		boolean player1UCB;
 		boolean player2UCB;
-		int player1UCTK;
-		int player2UCTK;
 		String settingsDescription;
 		String resultsDirectory;
 
@@ -172,27 +178,57 @@ public class Gomoku {
 			e.printStackTrace();
 		}
 
-		// get the property value
+		/**Getting settings from .properties files. */
+		
 		autoGame = Boolean.parseBoolean(userProp.getProperty("autogame"));
+		
 		totalGames = Integer.parseInt(userProp.getProperty("totalgames"));
+		
 		timePerMove = Double.parseDouble(userProp.getProperty("timepermove"));
+		
+		blocks = Integer.parseInt(userProp.getProperty("blocks"));
+		
+		threads = Integer.parseInt(userProp.getProperty("threads"));
+		
+		player1CUDA = Boolean.parseBoolean(userProp.getProperty("blkuseCUDA"));
+		
+		player1Multi = Boolean.parseBoolean(userProp.getProperty("blkuseMultiLeaf"));
+		
 		player1Heuristics = Boolean.parseBoolean(userProp
 				.getProperty("blkuseheuristics"));
+		
 		player1UCB = Boolean.parseBoolean(userProp.getProperty("blkuseUCB"));
+		
 		player1UCTK = Integer.parseInt(userProp.getProperty("blkUCTconstant"));
+		
+		player2CUDA = Boolean.parseBoolean(userProp.getProperty("whtuseCUDA"));
+		
+		player2Multi = Boolean.parseBoolean(userProp.getProperty("whtuseMultiLeaf"));
+		
 		player2Heuristics = Boolean.parseBoolean(userProp
 				.getProperty("whtuseheuristics"));
+		
 		player2UCB = Boolean.parseBoolean(userProp.getProperty("whtuseUCB"));
+		
 		player2UCTK = Integer.parseInt(userProp.getProperty("whtUCTconstant"));
+		
 		settingsDescription = userProp.getProperty("settingsDescription");
+		
 		resultsDirectory = userProp.getProperty("resultsdirectory");
 
+		
 		seconds = timePerMove;
 
 		Player black = new Player(seconds, player1Heuristics, player1UCB,
 				player1UCTK);
+		if(player1CUDA) {
+			black.setCuda(blocks, threads, player1Multi);
+		}
 		Player white = new Player(seconds, player2Heuristics, player2UCB,
 				player2UCTK);
+		if(player2CUDA) {
+			white.setCuda(blocks, threads, player2Multi);
+		}
 		int blacksum = 0;
 		int firstties = 0;
 		int win;
@@ -206,7 +242,13 @@ public class Gomoku {
 			}
 		}
 		black = new Player(seconds, player2Heuristics, player2UCB, player2UCTK);
+		if(player2CUDA) {
+			black.setCuda(blocks, threads, player1Multi);
+		}
 		white = new Player(seconds, player1Heuristics, player1UCB, player1UCTK);
+		if(player1CUDA) {
+			white.setCuda(blocks, threads, player2Multi);
+		}
 		int whitesum = 0;
 		int secondties = 0;
 		for (int i = 0; i < (totalGames / 2); i++) {

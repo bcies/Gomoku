@@ -158,8 +158,8 @@ public class SearchNode {
 				winrate = (playouts * winrate + 1.0) / (playouts + 1.0);
 				lastWin = 1.0;
 			} else if (win == -1) {
-				winrate = (playouts * winrate + 0.5) / (playouts + 1.0);
-				lastWin = 0.5;
+				winrate = (playouts * winrate + 0.65) / (playouts + 1.0);
+				lastWin = 0.65;
 			} else {
 				winrate = (playouts * winrate + 0.0) / (playouts + 1.0);
 				lastWin = 0.0;
@@ -175,8 +175,8 @@ public class SearchNode {
 				winrate = (playouts * winrate + 1.0) / (playouts + 1.0);
 				lastWin = 1.0;
 			} else if (win == -1) {
-				winrate = (playouts * winrate + 0.5) / (playouts + 1.0);
-				lastWin = 0.5;
+				winrate = (playouts * winrate + 0.65) / (playouts + 1.0);
+				lastWin = 0.65;
 			} else {
 				winrate = (playouts * winrate + 0.0) / (playouts + 1.0);
 				lastWin = 0.0;
@@ -232,8 +232,8 @@ public class SearchNode {
 				winrate = (playouts * winrate + 1.0) / (playouts + 1.0);
 				lastWin = 1.0;
 			} else if (win == -1) {
-				winrate = (playouts * winrate + 0.5) / (playouts + 1.0);
-				lastWin = 0.5;
+				winrate = (playouts * winrate + 0.65) / (playouts + 1.0);
+				lastWin = 0.65;
 			} else {
 				winrate = (playouts * winrate + 0.0) / (playouts + 1.0);
 				lastWin = 0.0;
@@ -249,8 +249,8 @@ public class SearchNode {
 				winrate = (playouts * winrate + 1.0) / (playouts + 1.0);
 				lastWin = 1.0;
 			} else if (win == -1) {
-				winrate = (playouts * winrate + 0.5) / (playouts + 1.0);
-				lastWin = 0.5;
+				winrate = (playouts * winrate + 0.65) / (playouts + 1.0);
+				lastWin = 0.65;
 			} else {
 				winrate = (playouts * winrate + 0.0) / (playouts + 1.0);
 				lastWin = 0.0;
