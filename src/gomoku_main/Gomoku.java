@@ -197,6 +197,7 @@ public class Gomoku {
 		int firstties = 0;
 		int win;
 		for (int i = 0; i < (totalGames / 2); i++) {
+			System.out.println("First half: Game number " + (i + 1));
 			win = runGame(black, white);
 			if (win == Board.BLACK) {
 				blacksum += 1;
@@ -209,6 +210,7 @@ public class Gomoku {
 		int whitesum = 0;
 		int secondties = 0;
 		for (int i = 0; i < (totalGames / 2); i++) {
+			System.out.println("Second half: Game number " + (i + 1));
 			win = runGame(black, white);
 			if (win == Board.WHITE) {
 				whitesum += 1;
