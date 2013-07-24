@@ -1,22 +1,27 @@
 package gomoku_main;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Properties;
 import java.util.Scanner;
 import java.util.StringTokenizer;
 
 public class Gomoku {
 
 	private static Board board;
+	private static boolean autoGame = false;
+	private static double seconds = 5.0;
 
 	public static int runGame(Player black, Player white) {
 		board = new Board();
-		boolean autoGame = true;
 		int win;
 		List<Double> turnTimes = new LinkedList<Double>();
 		List<Long> blackTurnPlayouts = new LinkedList<Long>();
@@ -118,22 +123,113 @@ public class Gomoku {
 	}
 
 	public static void main(String args[]) {
-		double seconds = 15;
+
 		Player black = new Player(seconds, true, true, 2);
 		black.setCuda(14, 512);
 		Player white = new Player(seconds, true, true, 2);
-		 runExperiment(seconds);
-//		runGame(black, white);
+		boolean startGame = false;
+		Scanner in = new Scanner(System.in);
+		System.out
+				.println("Run Experiment or Play Game?\n(Type experiment or game)");
+		while (!startGame) {
+			String command = in.nextLine();
+			if (command.contains("experiment")) {
+				startGame = true;
+				runExperiment();
+			} else if (command.contains("game")) {
+				startGame = true;
+				runGame(black, white);
+			}
+		}
 	}
 
-	public static void runExperiment(double seconds) {
-		Player black = new Player(seconds, false, true, 3);
-		black.setCuda(14, 512);
-		Player white = new Player(seconds, false, true, 3);
+	public static void runExperiment() {
+		int totalGames;
+		int blocks;
+		int threads;
+		int player1UCTK;
+		int player2UCTK;
+		double timePerMove;
+		boolean player1CUDA;
+		boolean player2CUDA;
+		boolean player1Heuristics;
+		boolean player2Heuristics;
+		boolean player1UCB;
+		boolean player2UCB;
+		String settingsDescription;
+		String resultsDirectory;
+
+		// load a properties file
+
+		Properties defaultProp = new Properties();
+		try {
+			defaultProp.load(new FileInputStream("default.properties"));
+		} catch (FileNotFoundException e1) {
+			System.err.println("config.properties not found.");
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+
+		Properties userProp = new Properties(defaultProp);
+		try {
+			userProp.load(new FileInputStream("user.properties"));
+		} catch (FileNotFoundException e) {
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		/**Getting settings from .properties files. */
+		
+		autoGame = Boolean.parseBoolean(userProp.getProperty("autogame"));
+		
+		totalGames = Integer.parseInt(userProp.getProperty("totalgames"));
+		
+		timePerMove = Double.parseDouble(userProp.getProperty("timepermove"));
+		
+		blocks = Integer.parseInt(userProp.getProperty("blocks"));
+		
+		threads = Integer.parseInt(userProp.getProperty("threads"));
+		
+		player1CUDA = Boolean.parseBoolean(userProp.getProperty("blkuseCUDA"));
+		
+		player1Heuristics = Boolean.parseBoolean(userProp
+				.getProperty("blkuseheuristics"));
+		
+		player1UCB = Boolean.parseBoolean(userProp.getProperty("blkuseUCB"));
+		
+		player1UCTK = Integer.parseInt(userProp.getProperty("blkUCTconstant"));
+		
+		player2CUDA = Boolean.parseBoolean(userProp.getProperty("whtuseCUDA"));
+		
+		player2Heuristics = Boolean.parseBoolean(userProp
+				.getProperty("whtuseheuristics"));
+		
+		player2UCB = Boolean.parseBoolean(userProp.getProperty("whtuseUCB"));
+		
+		player2UCTK = Integer.parseInt(userProp.getProperty("whtUCTconstant"));
+		
+		settingsDescription = userProp.getProperty("settingsDescription");
+		
+		resultsDirectory = userProp.getProperty("resultsdirectory");
+
+		
+		seconds = timePerMove;
+
+		Player black = new Player(seconds, player1Heuristics, player1UCB,
+				player1UCTK);
+		if(player1CUDA) {
+			black.setCuda(blocks, threads);
+		}
+		Player white = new Player(seconds, player2Heuristics, player2UCB,
+				player2UCTK);
+		if(player2CUDA) {
+			white.setCuda(blocks, threads);
+		}
 		int blacksum = 0;
 		int firstties = 0;
 		int win;
-		for (int i = 0; i < 20; i++) {
+		for (int i = 0; i < (totalGames / 2); i++) {
+			System.out.println("First half: Game number " + (i + 1));
 			win = runGame(black, white);
 			if (win == Board.BLACK) {
 				blacksum += 1;
@@ -141,12 +237,19 @@ public class Gomoku {
 				firstties += 1;
 			}
 		}
-		black = new Player(seconds, false, true, 3);
-		white = new Player(seconds, false, true, 3);
-		white.setCuda(14, 512);
+
+		black = new Player(seconds, player2Heuristics, player2UCB, player2UCTK);
+		if(player2CUDA) {
+			black.setCuda(blocks, threads);
+		}
+		white = new Player(seconds, player1Heuristics, player1UCB, player1UCTK);
+		if(player1CUDA) {
+			white.setCuda(blocks, threads);
+		}
 		int whitesum = 0;
 		int secondties = 0;
-		for (int i = 0; i < 20; i++) {
+		for (int i = 0; i < (totalGames / 2); i++) {
+			System.out.println("Second half: Game number " + (i + 1));
 			win = runGame(black, white);
 			if (win == Board.WHITE) {
 				whitesum += 1;
@@ -155,24 +258,27 @@ public class Gomoku {
 			}
 		}
 		System.out.println("\n");
-		System.out.println("First  20 games: black uses CUDA");
+		System.out.println("Settings:");
+		System.out.println(settingsDescription);
+		System.out.println("First " + (totalGames / 2) + " games:");
 		System.out.println("Black won " + blacksum + " games");
 		System.out.println("Ties: " + firstties);
-		System.out.println("\nSecond 20 games: white uses CUDA");
+		System.out.println("\nSecond " + (totalGames / 2) + " games:");
 		System.out.println("White won " + whitesum + " games");
 		System.out.println("Ties: " + secondties);
 
 		try {
-			File file = new File("results.txt");
+			File file = new File(resultsDirectory + "results.txt");
 			if (!file.exists()) {
 				file.createNewFile();
 			}
 			OutputStream outStream = new FileOutputStream(file);
 			Writer out = new OutputStreamWriter(outStream);
-			out.write("First 360 games: black uses UCB");
+			out.write("Settings:\n" + settingsDescription);
+			out.write("\nFirst " + (totalGames / 2) + " games:");
 			out.write("\nBlack won " + blacksum + " games");
 			out.write("\nTies: " + firstties);
-			out.write("\nSecond 360 games: white uses UCB");
+			out.write("\nSecond " + (totalGames / 2) + " games:");
 			out.write("\nWhite won " + whitesum + " games");
 			out.write("\nTies: " + secondties);
 			out.close();
