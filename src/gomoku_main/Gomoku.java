@@ -1,22 +1,26 @@
 package gomoku_main;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Properties;
 import java.util.Scanner;
 import java.util.StringTokenizer;
 
 public class Gomoku {
 
 	private static Board board;
+	private static boolean autoGame = false;
+	private static double seconds = 5.0;
 
 	public static int runGame(Player black, Player white) {
 		board = new Board();
-		boolean autoGame = false;
 		int win;
 		List<Double> turnTimes = new LinkedList<Double>();
 		List<Integer> blackTurnPlayouts = new LinkedList<Integer>();
@@ -118,64 +122,117 @@ public class Gomoku {
 	}
 
 	public static void main(String args[]) {
-		double seconds = 5;
-
 		Player black = new Player(seconds, true, true, 1);
-		Player white = new Player(seconds, true, false, 1);
-		// runExperiment(seconds);
-		runGame(black, white);
+		Player white = new Player(seconds, true, true, 1);
+		boolean startGame = false;
+		Scanner in = new Scanner(System.in);
+		System.out.println("Run Experiment or Play Game?\n(Type experiment or game)");
+		while(!startGame) {
+			String command = in.nextLine();
+			if(command.contains("experiment")) {
+				startGame = true;
+				runExperiment();
+			} else if (command.contains("game")) {
+				startGame = true;
+				runGame(black, white);
+			}
+		}
 	}
 
-	public static void runExperiment(double seconds) {
-		Player black = new Player(seconds, true, true, 3);
-		Player white = new Player(seconds, true, false, 3);
-		int blacksum = 0;
-		int firstties = 0;
-		int win;
-		for (int i = 0; i < 360; i++) {
-			win = runGame(black, white);
-			if (win == Board.BLACK) {
-				blacksum += 1;
-			} else if (win == Board.VACANT) {
-				firstties += 1;
-			}
-		}
-		black = new Player(20000, true, false, 1);
-		white = new Player(20000, true, true, 2);
-		int whitesum = 0;
-		int secondties = 0;
-		for (int i = 0; i < 360; i++) {
-			win = runGame(black, white);
-			if (win == Board.WHITE) {
-				whitesum += 1;
-			} else if (win == Board.VACANT) {
-				secondties += 1;
-			}
-		}
-		System.out.println("\n");
-		System.out.println("First  360 games: black uses UCB");
-		System.out.println("Black won " + blacksum + " games");
-		System.out.println("Ties: " + firstties);
-		System.out.println("\nSecond 360 games: white uses UCB");
-		System.out.println("White won " + whitesum + " games");
-		System.out.println("Ties: " + secondties);
+	public static void runExperiment() {
+		int totalGames;
+		double timePerMove;
+		boolean player1Heuristics;
+		boolean player2Heuristics;
+		boolean player1UCB;
+		boolean player2UCB;
+		int player1UCTK;
+		int player2UCTK;
+		String settingsDescription;
+		String resultsDirectory;
+
+		Properties prop = new Properties();
 
 		try {
-			File file = new File("results.txt");
-			if (!file.exists()) {
-				file.createNewFile();
+			// load a properties file
+			try{
+				prop.load(new FileInputStream("user.properties"));
+			} catch (IOException ex) {				
+				prop.load(new FileInputStream("default.properties"));
 			}
-			OutputStream outStream = new FileOutputStream(file);
-			Writer out = new OutputStreamWriter(outStream);
-			out.write("First 360 games: black uses UCB");
-			out.write("\nBlack won " + blacksum + " games");
-			out.write("\nTies: " + firstties);
-			out.write("\nSecond 360 games: white uses UCB");
-			out.write("\nWhite won " + whitesum + " games");
-			out.write("\nTies: " + secondties);
-			out.close();
 
-		} catch (Exception e) {
+			// get the property value
+			autoGame = Boolean.parseBoolean(prop.getProperty("autogame"));
+			totalGames = Integer.parseInt(prop.getProperty("totalgames"));
+			timePerMove = Double.parseDouble(prop.getProperty("timepermove"));
+			player1Heuristics = Boolean.parseBoolean(prop
+					.getProperty("blkuseheuristics"));
+			player1UCB = Boolean.parseBoolean(prop.getProperty("blkuseUCB"));
+			player1UCTK = Integer.parseInt(prop.getProperty("blkUCTconstant"));
+			player2Heuristics = Boolean.parseBoolean(prop
+					.getProperty("whtuseheuristics"));
+			player2UCB = Boolean.parseBoolean(prop.getProperty("whtuseUCB"));
+			player2UCTK = Integer.parseInt(prop.getProperty("whtUCTconstant"));
+			settingsDescription = prop.getProperty("settingsDescription");
+			resultsDirectory = prop.getProperty("resultsdirectory");
+
+			seconds = timePerMove;
+			
+			Player black = new Player(seconds, player1Heuristics, player1UCB, player1UCTK);
+			Player white = new Player(seconds, player2Heuristics, player2UCB, player2UCTK);
+			int blacksum = 0;
+			int firstties = 0;
+			int win;
+			for (int i = 0; i < (totalGames / 2); i++) {
+				win = runGame(black, white);
+				if (win == Board.BLACK) {
+					blacksum += 1;
+				} else if (win == Board.VACANT) {
+					firstties += 1;
+				}
+			}
+			black = new Player(seconds, player2Heuristics, player2UCB, player2UCTK);
+			white = new Player(seconds, player1Heuristics, player1UCB, player1UCTK);
+			int whitesum = 0;
+			int secondties = 0;
+			for (int i = 0; i < (totalGames / 2); i++) {
+				win = runGame(black, white);
+				if (win == Board.WHITE) {
+					whitesum += 1;
+				} else if (win == Board.VACANT) {
+					secondties += 1;
+				}
+			}
+			System.out.println("\n");
+			System.out.println("Settings:");
+			System.out.println(settingsDescription);
+			System.out.println("First " + (totalGames / 2) + " games:");
+			System.out.println("Black won " + blacksum + " games");
+			System.out.println("Ties: " + firstties);
+			System.out.println("\nSecond " + (totalGames / 2) + " games:");
+			System.out.println("White won " + whitesum + " games");
+			System.out.println("Ties: " + secondties);
+
+			try {
+				File file = new File(resultsDirectory + "results.txt");
+				if (!file.exists()) {
+					file.createNewFile();
+				}
+				OutputStream outStream = new FileOutputStream(file);
+				Writer out = new OutputStreamWriter(outStream);
+				out.write("Settings:\n" + settingsDescription);
+				out.write("\nFirst " + (totalGames / 2) + " games:");
+				out.write("\nBlack won " + blacksum + " games");
+				out.write("\nTies: " + firstties);
+				out.write("\nSecond " + (totalGames / 2) + " games:");
+				out.write("\nWhite won " + whitesum + " games");
+				out.write("\nTies: " + secondties);
+				out.close();
+
+			} catch (Exception e) {
+			}
+		} catch (IOException ex) {
+			ex.printStackTrace();
 		}
 
 	}
