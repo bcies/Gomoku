@@ -2,6 +2,7 @@ package gomoku_main;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -126,10 +127,11 @@ public class Gomoku {
 		Player white = new Player(seconds, true, true, 1);
 		boolean startGame = false;
 		Scanner in = new Scanner(System.in);
-		System.out.println("Run Experiment or Play Game?\n(Type experiment or game)");
-		while(!startGame) {
+		System.out
+				.println("Run Experiment or Play Game?\n(Type experiment or game)");
+		while (!startGame) {
 			String command = in.nextLine();
-			if(command.contains("experiment")) {
+			if (command.contains("experiment")) {
 				startGame = true;
 				runExperiment();
 			} else if (command.contains("game")) {
@@ -151,88 +153,96 @@ public class Gomoku {
 		String settingsDescription;
 		String resultsDirectory;
 
-		Properties prop = new Properties();
+		// load a properties file
+
+		Properties defaultProp = new Properties();
+		try {
+			defaultProp.load(new FileInputStream("default.properties"));
+		} catch (FileNotFoundException e1) {
+			System.err.println("config.properties not found.");
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+
+		Properties userProp = new Properties(defaultProp);
+		try {
+			userProp.load(new FileInputStream("user.properties"));
+		} catch (FileNotFoundException e) {
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		// get the property value
+		autoGame = Boolean.parseBoolean(userProp.getProperty("autogame"));
+		totalGames = Integer.parseInt(userProp.getProperty("totalgames"));
+		timePerMove = Double.parseDouble(userProp.getProperty("timepermove"));
+		player1Heuristics = Boolean.parseBoolean(userProp
+				.getProperty("blkuseheuristics"));
+		player1UCB = Boolean.parseBoolean(userProp.getProperty("blkuseUCB"));
+		player1UCTK = Integer.parseInt(userProp.getProperty("blkUCTconstant"));
+		player2Heuristics = Boolean.parseBoolean(userProp
+				.getProperty("whtuseheuristics"));
+		player2UCB = Boolean.parseBoolean(userProp.getProperty("whtuseUCB"));
+		player2UCTK = Integer.parseInt(userProp.getProperty("whtUCTconstant"));
+		settingsDescription = userProp.getProperty("settingsDescription");
+		resultsDirectory = userProp.getProperty("resultsdirectory");
+
+		seconds = timePerMove;
+
+		Player black = new Player(seconds, player1Heuristics, player1UCB,
+				player1UCTK);
+		Player white = new Player(seconds, player2Heuristics, player2UCB,
+				player2UCTK);
+		int blacksum = 0;
+		int firstties = 0;
+		int win;
+		for (int i = 0; i < (totalGames / 2); i++) {
+			win = runGame(black, white);
+			if (win == Board.BLACK) {
+				blacksum += 1;
+			} else if (win == Board.VACANT) {
+				firstties += 1;
+			}
+		}
+		black = new Player(seconds, player2Heuristics, player2UCB, player2UCTK);
+		white = new Player(seconds, player1Heuristics, player1UCB, player1UCTK);
+		int whitesum = 0;
+		int secondties = 0;
+		for (int i = 0; i < (totalGames / 2); i++) {
+			win = runGame(black, white);
+			if (win == Board.WHITE) {
+				whitesum += 1;
+			} else if (win == Board.VACANT) {
+				secondties += 1;
+			}
+		}
+		System.out.println("\n");
+		System.out.println("Settings:");
+		System.out.println(settingsDescription);
+		System.out.println("First " + (totalGames / 2) + " games:");
+		System.out.println("Black won " + blacksum + " games");
+		System.out.println("Ties: " + firstties);
+		System.out.println("\nSecond " + (totalGames / 2) + " games:");
+		System.out.println("White won " + whitesum + " games");
+		System.out.println("Ties: " + secondties);
 
 		try {
-			// load a properties file
-			try{
-				prop.load(new FileInputStream("user.properties"));
-			} catch (IOException ex) {				
-				prop.load(new FileInputStream("default.properties"));
+			File file = new File(resultsDirectory + "results.txt");
+			if (!file.exists()) {
+				file.createNewFile();
 			}
+			OutputStream outStream = new FileOutputStream(file);
+			Writer out = new OutputStreamWriter(outStream);
+			out.write("Settings:\n" + settingsDescription);
+			out.write("\nFirst " + (totalGames / 2) + " games:");
+			out.write("\nBlack won " + blacksum + " games");
+			out.write("\nTies: " + firstties);
+			out.write("\nSecond " + (totalGames / 2) + " games:");
+			out.write("\nWhite won " + whitesum + " games");
+			out.write("\nTies: " + secondties);
+			out.close();
 
-			// get the property value
-			autoGame = Boolean.parseBoolean(prop.getProperty("autogame"));
-			totalGames = Integer.parseInt(prop.getProperty("totalgames"));
-			timePerMove = Double.parseDouble(prop.getProperty("timepermove"));
-			player1Heuristics = Boolean.parseBoolean(prop
-					.getProperty("blkuseheuristics"));
-			player1UCB = Boolean.parseBoolean(prop.getProperty("blkuseUCB"));
-			player1UCTK = Integer.parseInt(prop.getProperty("blkUCTconstant"));
-			player2Heuristics = Boolean.parseBoolean(prop
-					.getProperty("whtuseheuristics"));
-			player2UCB = Boolean.parseBoolean(prop.getProperty("whtuseUCB"));
-			player2UCTK = Integer.parseInt(prop.getProperty("whtUCTconstant"));
-			settingsDescription = prop.getProperty("settingsDescription");
-			resultsDirectory = prop.getProperty("resultsdirectory");
-
-			seconds = timePerMove;
-			
-			Player black = new Player(seconds, player1Heuristics, player1UCB, player1UCTK);
-			Player white = new Player(seconds, player2Heuristics, player2UCB, player2UCTK);
-			int blacksum = 0;
-			int firstties = 0;
-			int win;
-			for (int i = 0; i < (totalGames / 2); i++) {
-				win = runGame(black, white);
-				if (win == Board.BLACK) {
-					blacksum += 1;
-				} else if (win == Board.VACANT) {
-					firstties += 1;
-				}
-			}
-			black = new Player(seconds, player2Heuristics, player2UCB, player2UCTK);
-			white = new Player(seconds, player1Heuristics, player1UCB, player1UCTK);
-			int whitesum = 0;
-			int secondties = 0;
-			for (int i = 0; i < (totalGames / 2); i++) {
-				win = runGame(black, white);
-				if (win == Board.WHITE) {
-					whitesum += 1;
-				} else if (win == Board.VACANT) {
-					secondties += 1;
-				}
-			}
-			System.out.println("\n");
-			System.out.println("Settings:");
-			System.out.println(settingsDescription);
-			System.out.println("First " + (totalGames / 2) + " games:");
-			System.out.println("Black won " + blacksum + " games");
-			System.out.println("Ties: " + firstties);
-			System.out.println("\nSecond " + (totalGames / 2) + " games:");
-			System.out.println("White won " + whitesum + " games");
-			System.out.println("Ties: " + secondties);
-
-			try {
-				File file = new File(resultsDirectory + "results.txt");
-				if (!file.exists()) {
-					file.createNewFile();
-				}
-				OutputStream outStream = new FileOutputStream(file);
-				Writer out = new OutputStreamWriter(outStream);
-				out.write("Settings:\n" + settingsDescription);
-				out.write("\nFirst " + (totalGames / 2) + " games:");
-				out.write("\nBlack won " + blacksum + " games");
-				out.write("\nTies: " + firstties);
-				out.write("\nSecond " + (totalGames / 2) + " games:");
-				out.write("\nWhite won " + whitesum + " games");
-				out.write("\nTies: " + secondties);
-				out.close();
-
-			} catch (Exception e) {
-			}
-		} catch (IOException ex) {
-			ex.printStackTrace();
+		} catch (Exception e) {
 		}
 
 	}
