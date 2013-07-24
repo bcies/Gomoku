@@ -399,13 +399,13 @@ public class CudaNode extends SearchNode {
 			
 			for (i = 0; i < bestIndex.length; i++) {
 				if (bestIndex[i] != -1) {
+					playouts += threads;
 					double value = (children.get(bestIndex[i]).getWinRate()
 							* formerPlayouts + wins[i])
 							/ playouts;
 					children.get(bestIndex[i]).setWinRate(value);
 					children.get(bestIndex[i]).setPlayouts(
 							children.get(bestIndex[i]).getPlayouts() + threads);
-					playouts += threads;
 				}
 			}
 			double sumWins = 0;

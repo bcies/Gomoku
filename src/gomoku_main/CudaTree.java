@@ -137,9 +137,10 @@ public class CudaTree extends SearchTree {
 			int sumThreads = 0;
 			for (i = 0; i < bestIndex.length; i++) {
 				if (bestIndex[i] != -1) {
+					sumThreads += threads;
 					double value = (treeNodes.get(bestIndex[i]).getWinRate()
 							* formerPlayouts + wins[i])
-							/ totalPlayouts;
+							/ (sumThreads+formerPlayouts);
 					treeNodes.get(bestIndex[i]).setWinRate(value);
 					treeNodes.get(bestIndex[i])
 							.setPlayouts(
